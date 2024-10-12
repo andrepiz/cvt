@@ -1,97 +1,40 @@
-function [ix_blind_fov, ix_blind_baffle, sc2body_az_urf, sc2body_ze_urf, sepAngReq_fov, sepAngReq_baffle] = ...
-    check_visibility(this, bodies_list, et, rr_eci, q_eci2rbf, p)
-    % Checks if point observed from a camera is in the FoV, comparing
-    % the angle of the celestial body with respect to the boresight 
-    % with the sum of the angular dimension of the sphere
-    % and the field of view of the sensor.
-    % Output are in [nb x np x nd] dimension, where:
-    %   nb: number of celestial bodies
-    %   np: number of points
-    %   nd: number of STRs
+function [active, infov, observable, lit] = check_visibility(fov, N, Vinc, Vref, flag_fast)
+% Check if a point observed from a camera is active, i.e. it must
+% respect these three conditions:
 
-    exp_str.fov_shape           = 'circle';
-    exp_str.baffle_shape        = 'circle';
-    exp_str.observer            = 'earth';
-    exp_str.rpy_offpoint        = [0;0;0];
+active = false(1, size(N, 2));
+[observable, lit] = deal(active);
 
-    if(~exist('p','var')), p = []; end
-    p = cp_check_input_pars(exp_str,p);
-    
-    nb = length(bodies_list);
-    nd = length(this);
-    np = size(rr_eci, 2);
+% 1. Be inside the FOV
+switch length(fov)
+    case 1
+        anglebearing = acos(-Vref(3,:));
+        infov = anglebearing <= fov/2;
+    case 2
+        anglebearing = abs(atan(Vref([1 2],:)./Vref(3,:)));
+        infov = all(anglebearing <= reshape(fov, 2, 1)/2);
+    otherwise
+        error('FOV dimension must be either 1 or 2')
+end
+active = infov;
+if all(~active) && flag_fast
+    return
+end
 
-    % init
-    sepAngReq_fov = zeros(nb, np, nd);
-    sepAngReq_baffle = zeros(nb, np, nd);
-    sc2body_az_urf = zeros(nb, np, nd);
-    sc2body_ze_urf = zeros(nb, np, nd);
-    ix_blind_fov = zeros(nb, np, nd);
-    ix_blind_baffle = zeros(nb, np, nd);
-    obs2body_eci = zeros(3,np,nb);
-    sc2body_eci  = zeros(3,np,nb);
-    sc2body_norm_eci = zeros(1,np,nb);
-    sc2body_dir_eci = zeros(3,np,nb);
-    R_body = zeros(1,np);
-    angDim_body  = zeros(1,np,nb);
-    q_rbf2urf = zeros(4,nd);
-    q_eci2urf = zeros(4,np,nd);
-    sc2body_dir_urf  = zeros(3,np,nb,nd);
-    sc2body_sph_urf  = zeros(3,np,nb,nd);
-    
-    for i = 1:nb
+% 2. Its surface must be visible, i.e. the angle between normal and reflection direction must be lower than 90°
+delta_ref = acos(dot(N, Vref));
+observable = delta_ref <= pi/2;
+active = active & observable;
+if all(~active) && flag_fast
+    return
+end
 
-        % direction and semicone angle of each body wrt sc
-        obs2body_eci(:,:,i) = aca_body_position(bodies_list{i}, p.observer, 'J2000', et);
-        sc2body_eci(:,:,i) = -rr_eci + obs2body_eci(:,:,i);
-        sc2body_norm_eci(1,:,i) = cp_norm(sc2body_eci(:,:,i));
-        sc2body_dir_eci(:,:,i) = cp_normalize(sc2body_eci(:,:,i));
-        R_body(i) = Environment.Body.(bodies_list{i}).R_v;
-        angDim_body(1,:,i) = asin(R_body(i)./sc2body_norm_eci(1,:,i));
+% 3. Its surface must be illuminated, i.e. the angle between normal and incident direction must be lower than 90°
+delta_inc = acos(dot(N, Vinc));
+lit = delta_inc <= pi/2;
+active = active & lit;
+if all(~active) && flag_fast
+    return
+end
 
-        for j = 1:nd
-
-            % azimuth and zenith of each body on each sensor frame
-            % n.b. boresight direction is along +Z_URF
-            q_rbf2urf(:,j) = cp_quat_conj(cp_dcm_to_quat(this(j).dcm0_v));
-            q_eci2urf(:,:,j) = cp_quat_mult(q_eci2rbf, q_rbf2urf(:,j));
-            sc2body_dir_urf(:,:,i,j) = cp_rotframe(sc2body_dir_eci(:,:,i), q_eci2urf(:,:,j));
-            sc2body_sph_urf(:,:,i,j) = cp_sph_coord(sc2body_dir_urf(:,:,i,j));
-            sc2body_az_urf(i,:,j) = cp_wrap_to_2pi(sc2body_sph_urf(2,:,i,j));
-            sc2body_ze_urf(i,:,j) = pi/2-sc2body_sph_urf(3,:,i,j);
-
-            % fov
-            switch p.fov_shape
-                case 'circle'
-                    fov_ang = this(j).fov_v;
-                case 'square'
-                    % ...
-                    error('To be implemented')
-            end
-
-            % baffle
-            switch p.baffle_shape
-                case 'circle'
-                    switch bodies_list{i}
-                        case 'earth'
-                            baffle_ang = this(j).baffle_earth_v;
-                        case 'sun'
-                            baffle_ang = this(j).baffle_sun_v;
-                        otherwise
-                            baffle_ang = nan;
-                    end
-                case 'square'
-                    error('To be implemented')
-            end       
-
-            % separation angles required
-            sepAngReq_fov(i,:,j) = fov_ang + angDim_body(1,:,i);
-            sepAngReq_baffle(i,:,j) =  baffle_ang + angDim_body(1,:,i);
-
-            % blindings
-            ix_blind_fov(i,:,j) = sc2body_ze_urf(i,:,j) < sepAngReq_fov(i,:,j);
-            ix_blind_baffle(i,:,j) = sc2body_ze_urf(i,:,j) < sepAngReq_baffle(i,:,j);
-
-        end
-    end
 end
