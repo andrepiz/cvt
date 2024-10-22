@@ -1,7 +1,11 @@
-function [bins, counts, edges] = quantization(coords, values, limits, granularity, method)
+function [bins, counts, edges] = quantization(coords, values, limits, granularity, method, flag_progress)
 % Group and sum scattered data points into fixed-size quantiles with specified granularity.
 % Each point value is kept in the nearest-neighbour sector or
 % interpolated with a different method
+
+if ~exist('flag_progress','var')
+    flag_progress = false;
+end
 
 coords_scaled = coords*granularity;
 nx = limits(1,2)*granularity;
@@ -37,7 +41,7 @@ for ii = 1:length(xsubedges)
     for jj = 1:length(ysubedges)
 
         c = c + 1;
-        if mod(c, round((length(xsubedges)*length(ysubedges))/10)) == 0
+        if mod(c, round((length(xsubedges)*length(ysubedges))/10)) == 0 && flag_progress
             disp(['     ',num2str(round(1e2*(c)/(length(xsubedges)*length(ysubedges)))),'%'])
         end
         
