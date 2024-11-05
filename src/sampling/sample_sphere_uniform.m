@@ -1,16 +1,19 @@
-function [phi1, phi2, hphi] = sample_sphere_uniform(alpha, nhphi, phimax)
+function [phi1, phi2, hphi] = sample_sphere_uniform(alpha, nhphi, philims)
 % This function sample points between the boundaries of an
 % illuminated sphere at phase angle alpha with uniform sample step.
+% If philims are not specified, [-pi/2 pi/2] are used as limits.
 
-if ~exist('phimax','var')
-    phimax = pi/2;
+if ~exist('philims','var')
+    philims = pi/2*[-1 1];
 end
+phimin = philims(1);
+phimax = philims(2);
 
 if alpha >= 0
-    phi1min = max(alpha - pi/2, -phimax);
+    phi1min = max(alpha - pi/2, phimin);
     phi2max = phimax;
 else
-    phi1min = -phimax;
+    phi1min = phimin;
     phi2max = min(alpha + pi/2, phimax);
 end
 

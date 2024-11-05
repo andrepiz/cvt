@@ -1,12 +1,14 @@
-function [phi1, phi2, hphi, err] = sample_sphere_projected_uniform(alpha, nhphi, phimax)
+function [phi1, phi2, hphi, err] = sample_sphere_projected_uniform(alpha, nhphi, philims)
 % This function sample points between the boundaries of an
 % illuminated sphere at phase angle alpha such that the projection of the
 % arcs spanned by the angle intervals is constant on the projection plane.
-% If phimax is not specified, pi/2 is used as maximum angle.
+% If philims are not specified, [-pi/2 pi/2] are used as limits.
 
-if ~exist('phimax','var')
-    phimax = pi/2;
+if ~exist('philims','var')
+    philims = pi/2*[-1 1];
 end
+phimin = philims(1);
+phimax = philims(2);
 
 % Procedure: 
 % solve the equation linking the consecutive angles with the projection 
@@ -34,10 +36,10 @@ end
 % n * (sin(hphi/2) * cos(alpha - phi1 - hphi/2)) - sin(phi_span/2) * cos(alpha - phi2max + phi_span/2) = 0
 
 if alpha >= 0
-    phi1min = max(alpha - pi/2, -phimax);
+    phi1min = max(alpha - pi/2, phimin);
     phi2max = phimax;
 else
-    phi1min = -phimax;
+    phi1min = phimin;
     phi2max = min(alpha + pi/2, phimax);
 end
 
