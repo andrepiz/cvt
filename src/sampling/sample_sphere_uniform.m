@@ -17,7 +17,7 @@ else
     phi2max = min(alpha + pi/2, phimax);
 end
 
-hphi = (phi2max - phi1min)/(nhphi + 1);
+hphi = (phi2max - phi1min)/(nhphi);
 phi = phi1min:hphi:phi2max;
 
 phi1 = phi(1:end-1);
