@@ -5,19 +5,10 @@ function [lon_lims, lat_lims, P_lims] = find_sphere_lonlat_limits(pos_c2t_TAR, d
 %an attitude dcm_TAR2CAM. The tolerance parameter is the difference in
 %radians between following iterations under which the solution is
 %considered found.
-%Boresight of camera is assumed aligned to +Z direction
-% bs = [0; 0; 1];
 
-% Number of points to sample depends on how much tilted is the camera with
-% respect to the direction aligned with the line linking the center of the
-% sphere with the camera
-% tiltAngle = norm(fov) + acos(dot(pos_c2t_TAR./norm(pos_c2t_TAR), dcm_TAR2CAM'*bs));
-% % Maximum tilt angle
-% maxAngle = pi/2;
-% % Maximum sampling number of points 
-% nperMax = 1e4;
-% 
-% nper = round(tiltAngle/maxAngle*nperMax);
+if ~exist('flag_debug','var')
+    flag_debug = false;
+end
 
 nper = 20*round(1/tol);
 
@@ -38,14 +29,29 @@ while err >= tol
     [lims(4), ix_lat_max] = max(sph(3,:));
     
     err = max(abs(lims - lims_prev));
-
-    disp([num2str(nper), ' points, max error: ', num2str(rad2deg(err)), ' deg'])
-
+    if flag_debug
+        disp([num2str(nper), ' points, max error: ', num2str(rad2deg(err)), ' deg'])
+    end
     nper = round(nper*1.1);
 end
     
 lon_lims = [lims(1), lims(2)];
 lat_lims = [lims(3), lims(4)];
 P_lims = P(:, [ix_lon_min, ix_lon_max, ix_lat_min, ix_lat_max]);
+
+if all(isnan([lon_lims, lat_lims]))
+    % All nan means either the FOV do not cross at all or it entirely
+    % contains the sphere. Check the boresight to find out.
+    bsP1_TAR = -pos_c2t_TAR;        % P1 at camera
+    bsDir_TAR = dcm_TAR2CAM'*[0;0;1];
+    bsP2_TAR = bsP1_TAR + R*bsDir_TAR; % P2 at 1 radius distance from camera along boresight
+    Pbs = intersect_line_sphere(bsP1_TAR, bsP2_TAR, [0;0;0], R);
+    if ~isnan(Pbs)
+        % Bs intersect, use tangency angle as limits
+        angle_tangency_body = find_sphere_tangent_angle(norm(pos_c2t_TAR), R);
+        lon_lims = angle_tangency_body*[-1 1];
+        lat_lims = angle_tangency_body*[-1 1];
+    end
+end
 
 end
