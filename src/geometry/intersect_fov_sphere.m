@@ -16,7 +16,7 @@ los_CAM = get_fov_perimeter(fov, nper, flag_debug);
 los = dcm_TAR2CAM'*los_CAM;
 
 losP1 = -pos_c2t_TAR;
-losP2 = losP1 + R*los; % P2 at 1 radius distance from camera along boresight
+losP2 = losP1 + norm(losP1)*los; % P2 at distance from camera along boresight equal to distance of the target 
 
 P = intersect_line_sphere(losP1, losP2, [0; 0; 0], R);
 
