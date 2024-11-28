@@ -5,6 +5,7 @@ function mat_out = matop(mat_in, op, varargin)
 % 'domain' [l, u]: re-map to a new domain with l and u as bounds
 % 'gamma' [g]: multiply to the power of g
 % 'mean' [m]: scale such that mean becomes m
+% If varargin is empty, returns the original matrix
 
 if iscell(op) && length(varargin)==length(op)
     % apply transformations one consequent to other

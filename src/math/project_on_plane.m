@@ -11,6 +11,10 @@ dir = dir./vecnorm(dir);
 
 if nd == nv
     vec_proj = vec - (dot(dir, vec)).*dir;
+elseif nd == 1
+    vec_proj = vec - dot(repmat(dir, 1, nv), vec).*repmat(dir, 1, nv);
+elseif nv == 1
+    vec_proj = repmat(vec, 1, nv) - dot(dir, repmat(vec, 1, nv)).*dir;
 else
     error('Dimensions of vec and dir are not consistent')
 end
