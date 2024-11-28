@@ -1,4 +1,4 @@
-function [active, infov, observable, lit] = get_sphere_visibility_masks(latgrid, longrid, pos_c2t_TAR, pos_s2t_TAR, dcm_TAR2CAM, Rbody, fov, nthreads, flag_debug)
+function [active, infov, observable, lit] = get_sphere_visibility_masks(latgrid, longrid, pos_c2t_TAR, pos_l2t_TAR, dcm_TAR2CAM, Rbody, fov, nthreads, flag_debug)
 % Given grids of latitude and longitude points defined in a target sphere
 % frame TAR where X axis is 0°N 0°E, Y axis is 0°N 90°E and Z axis is 90°N, 0°E,
 % generate masks of true/false values depending on the following conditions:
@@ -8,8 +8,8 @@ function [active, infov, observable, lit] = get_sphere_visibility_masks(latgrid,
 %        with respect to TAR and placed at a camera-to-target position
 %        pos_c2t in TAR frame
 % observable: its surface can be seen by the camera
-% lit: its surface can be illuminated by the sun placed at a sun-to-target
-%      position pos_s2t in TAR frame
+% lit: its surface can be illuminated by the sun placed at a light-to-target
+%      position pos_l2t in TAR frame
 %
 % Camera boresight is assumed to be the third axis. 
 % If fov is a 2-element vector, these are assumed to be the horizontal and vertical
@@ -28,7 +28,7 @@ active = zeros(size(latgrid));
 parfor (ii = 1:nlat, nthreads)
     pos_t2p_TAR = cart_coord([repmat(Rbody, 1, nlon); longrid(ii, :); latgrid(ii, :)]);
     N = vecnormalize(dcm_TAR2CAM*pos_t2p_TAR); % assumed radial direction
-    Vinc = -vecnormalize(dcm_TAR2CAM*(pos_s2t_TAR + pos_t2p_TAR)); % dir_p2s_CAM
+    Vinc = -vecnormalize(dcm_TAR2CAM*(pos_l2t_TAR + pos_t2p_TAR)); % dir_p2s_CAM
     Vref = -vecnormalize(dcm_TAR2CAM*(pos_c2t_TAR + pos_t2p_TAR)); % dir_p2c_CAM
     [active(ii, :), infov(ii, :), observable(ii, :), lit(ii, :)] = check_visibility(fov, N, Vinc, Vref, ~flag_debug);
 end
@@ -98,7 +98,7 @@ if flag_debug
     kP = 1;
     [xS, yS, zS] = sphere(100);
     h = surf(kP*xS, kP*yS, kP*zS);
-    set(h, 'FaceColor', 'texturemap', 'CData', cover, 'EdgeColor', 'none','FaceAlpha',0.5);
+    set(h, 'FaceColor', 'texturemap', 'CData', cover, 'EdgeColor', 'none','FaceAlpha',0.2);
     
     if length(fov) == 1
         % FOV

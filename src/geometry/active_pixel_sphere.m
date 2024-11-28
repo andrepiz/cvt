@@ -1,8 +1,8 @@
-function [pxActive, pxActive_perc] = active_pixel_sphere(diameter_px, res_px, alpha)
+function [pxActive, pxActive_perc] = active_pixel_sphere(diameter_px, res_px, phase_angle)
 
 % Active pixels
 a = diameter_px/2;
-b = a*cos(alpha);
+b = a*cos(phase_angle);
 pxCircle = pi*a^2;
 pxEll = pi*a*b;
 if diameter_px <= res_px
