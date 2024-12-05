@@ -1,4 +1,4 @@
-function [bins, counts, edges] = shiftedquantization(coords, values, limits, granularity, method, shift, weight)
+function [bins, counts, edges] = shiftedquantization(coords, values, limits, granularity, params)
 % Group and sum scattered data points into fixed-size quantiles with
 % specified granularity.
 % Each point value is kept in the nearest-neighbour sector or
@@ -8,17 +8,26 @@ function [bins, counts, edges] = shiftedquantization(coords, values, limits, gra
 % directions. If weight is specified, the mean is weighted with a kernel of
 % size [NxN] where N is the maximum shift
 
-if ~exist('shift','var')
-    shift = 0;
+arguments
+    coords double
+    values double
+    limits double = [floor(min(coords,[],2)), 1 + ceil(max(coords,[],2))]
+    granularity (1,1) double = 1
+    params.method char = 'gaussian'
+    params.flag_progress (1,1) logical = false
+    params.shift (1,1) double = 0
+    params.weight double = 1;
 end
 
-if ~exist('weight','var')
-    weight = ones((2*shift + 1));
+% Preliminary Checks
+sz = (2*params.shift + 1);
+nw = length(params.weight(:));
+if nw == 1
+    weight = params.weight*ones(sz);
+    nw = length(weight(:));
+else
+    weight = params.weight;
 end
-
-sz = (2*shift + 1);
-nw = length(weight(:));
-
 if sz^2 ~= nw
     error('The weighting kernel must be of size [shift + 1 x shift + 1]')
 end
@@ -33,7 +42,7 @@ for ix = 1:nw
     rowshift = ixrow - centerrow;
     colshift = ixcol - centercol;
     coords_shifted = coords + [rowshift; colshift];
-    [bins_temp, counts_shift{ix}] = quantization(coords_shifted, values, limits, granularity, method);
+    [bins_temp, counts_shift{ix}] = quantization(coords_shifted, values, limits, granularity, params);
     bins_shift{ix} = weight_normalized(ix)*bins_temp;
 end
 

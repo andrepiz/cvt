@@ -1,10 +1,15 @@
-function [bins, counts, edges] = quantization(coords, values, limits, granularity, method, flag_progress)
+function [bins, counts, edges] = quantization(coords, values, limits, granularity, params)
 % Group and sum scattered data points into fixed-size quantiles with specified granularity.
 % Each point value is kept in the nearest-neighbour sector or
-% interpolated with a different method
+% interpolated with a different params.method
 
-if ~exist('flag_progress','var')
-    flag_progress = false;
+arguments
+    coords double
+    values double
+    limits double = [floor(min(coords,[],2)), 1 + ceil(max(coords,[],2))]
+    granularity (1,1) double = 1
+    params.method char = 'gaussian'
+    params.flag_progress (1,1) logical = false
 end
 
 coords_scaled = coords*granularity;
@@ -31,17 +36,11 @@ edges = {unique([xsubedges{:}]), unique([ysubedges{:}])};
 c = 0;
 
 % Binning
-
-% fh = figure();
-% grid on; hold on
-% view([90, 90])
-% xlim(limits(1,:)*granularity)
-% ylim(limits(2,:)*granularity)
 for ii = 1:length(xsubedges)
     for jj = 1:length(ysubedges)
 
         c = c + 1;
-        if mod(c, round((length(xsubedges)*length(ysubedges))/10)) == 0 && flag_progress
+        if mod(c, round((length(xsubedges)*length(ysubedges))/10)) == 0 && params.flag_progress
             disp(['     ',num2str(round(1e2*(c)/(length(xsubedges)*length(ysubedges)))),'%'])
         end
         
@@ -55,7 +54,7 @@ for ii = 1:length(xsubedges)
 
         [subcounts, ~, ~, idx_x, idx_y] = histcounts2(subcoords_scaled(1,:), subcoords_scaled(2,:), xsubedges{ii}, ysubedges{jj});
         subbins = zeros(size(subcounts));
-        switch method
+        switch params.method
             case 'sum'
                 subcounts_check = zeros(size(subcounts));
                 for ix = 1:length(subvalues)
@@ -67,20 +66,15 @@ for ii = 1:length(xsubedges)
                 end
 
             otherwise 
-                % F = scatteredInterpolant(subcoords_scaled(1,:)', subcoords_scaled(2,:)', subvalues', method);
                 xsubedge_temp = xsubedges{ii};
                 ysubedge_temp = ysubedges{jj};
                 xv = (xsubedge_temp(1:end - 1) + xsubedge_temp(2:end))/2;
                 yv = (ysubedge_temp(1:end - 1) + ysubedge_temp(2:end))/2;
                 [xvg, yvg] = meshgrid(xv, yv);
-                % subbins = F({xvg, yvg});
-                subbins = griddata(coords_scaled(1,:), coords_scaled(2,:), values, xvg, yvg, method)';
+                subbins = griddata(coords_scaled(1,:), coords_scaled(2,:), values, xvg, yvg, params.method)';
                 if isempty(subbins)
                    subbins = zeros(size(subcounts));
                 end
-                % fh = figure(fh);
-                % % scatter3(subcoords_scaled(1,1:5*granularity:end)', subcoords_scaled(2,1:5*granularity:end)', subvalues(1:5*granularity:end)','k')
-                % surf(xv, yv, subbins','EdgeColor','none')
         end
 
         subbinsixs = {(ii-1)*xstep + 1:ii*xstep, (jj-1)*ystep + 1:jj*ystep};
@@ -90,38 +84,10 @@ for ii = 1:length(xsubedges)
 
 end
 
-
-if ~strcmp(method,'sum')
-    bins = fillmissing(bins, method, 'MaxGap', 1);
+if ~strcmp(params.method,'sum')
+    bins = fillmissing(bins, params.method, 'MaxGap', 1);
     bins = fillmissing(bins, 'constant', 0);
 end
-
-% figure();
-% surf(bins','EdgeColor','none')
-
-% % debug
-% figure(), subplot(1,2,1)
-% mat_count_vis = mat_count;
-% mat_count_vis(mat_count<=0) = nan;
-% grid on, hold on
-% grid minor
-% scatter(xd(:), yd(:), [], mat_count_vis(:))
-% colormap('gray');
-% clim([0, max(mat_count_vis(:))])
-% axis equal
-% colorbar
-% 
-% figure()
-% grid on, hold on
-% grid minor
-% surf(xd, yd, zd, 'EdgeColor','none')
-% colormap('gray');
-% axis equal
-% colorbar
-% xlabel('u [px]')
-% ylabel('v [px]')
-% xlim([0, nx])
-% ylim([0, ny])
 
 end
 

@@ -19,7 +19,7 @@ switch method_intersection
         nhl = size(dir_r2p, 2);
         % Sample the ray
         ray_span_max = Rsph*tan(rays_span_angle);
-        ray_span_min = Rsph*pi/2/min(size(dem.Values));   % resolution of DEM map
+        ray_span_min = Rsph*pi/2/min(size(dem.Values));   % half the span of a pixel of DEM map
         switch method_sampling
             case 'logspace'
                 ray_span_vec = logspace(log10(ray_span_min), log10(ray_span_max), nrs);
