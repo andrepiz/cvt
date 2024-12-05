@@ -3,7 +3,7 @@ function q_out = quat_mult(q1_s,q2_s,conj)
 % i.e. q1 is [4-by-N1] and q2 [4-by-N2] with N1=N2, or N1=1 & N2 whatever,.
 %      or  N1 whatever & N2=1
 %
-%  qn = cp_quat_mult(q1,q2)
+%  qn = quat_mult(q1,q2)
 %    This function returns q = q1*q2
 %
 %   q1: First rotation quaternion
