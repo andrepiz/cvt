@@ -87,11 +87,29 @@ elseif ninter ~= nper
     % Rotate to a REF frame where X is aligned with dir_t2c
     dcm_TAR2REF = euler_to_dcm([0; 0; phase_angle]);
     P_inter_REF = dcm_TAR2REF*P_inter_TAR;
+    bsDir_REF = dcm_TAR2REF*bsDir_TAR;
 
-    % Fill with circles the missing points
-    [P_inter_REF([2 3],:), ixs_filled] = fill_nans_with_arcs(P_inter_REF([2 3],:), 1, flag_debug);
+    % Find direction of filling
+    ixs_nan = all(isnan(P_inter_REF));
+    %ix_first = find(~ixs_nan, 1, 'first');
+    %ix_last = find(~ixs_nan, 1, 'last');
+    ixs_first_nans = find(diff([0, ixs_nan])>0);
+    ixs_last_nans = find(diff([ixs_nan, 0])<0);
+    thetaFirst = atan2(P_inter_REF(3,ixs_first_nans(1)), P_inter_REF(2, ixs_first_nans(1)));
+    thetaLast = atan2(P_inter_REF(3,ixs_last_nans(end)), P_inter_REF(2, ixs_last_nans(end)));
+    thetaBs = atan2(bsDir_REF(3), bsDir_REF(2));
+    if thetaLast > thetaFirst
+        dir_filling = thetaBs > thetaLast | thetaBs < thetaFirst; % clockwise 
+        dir_filling = +1*dir_filling -1*~dir_filling;
+    else
+        dir_filling = thetaBs > thetaFirst | thetaBs < thetaLast; % clockwise 
+        dir_filling = +1*dir_filling -1*~dir_filling;
+    end        
+
+    % Fill with circles the missing points using the correct direction
+    [P_inter_REF([2 3],:), ixs_nan] = fill_nans_with_arcs(P_inter_REF([2 3],:), dir_filling, flag_debug);
     angle_tangency_body = find_sphere_tangent_angle(norm(pos_c2t_TAR), R);
-    P_inter_REF(1, ixs_filled) = R*cos(angle_tangency_body); 
+    P_inter_REF(1, ixs_nan) = R*cos(angle_tangency_body); 
 
     % Rotate back to TAR frame
     P_inter_TAR = dcm_TAR2REF'*P_inter_REF;
@@ -108,7 +126,7 @@ end
 if flag_debug
     k1 = R;
     k2 = R/2;
-    k3 = R/2;
+    k3 = (norm(pos_c2t_TAR) - R)/2;
     nper = 100;
     [x,y,z] = sphere(100);
     figure(); grid on, hold on, axis equal, camzoom(1), view(-bsDir_TAR)
@@ -116,6 +134,7 @@ if flag_debug
     plot3(P_inter_TAR(1,:), P_inter_TAR(2,:), P_inter_TAR(3,:),'k-')
     scatter3(P_lims(1,:), P_lims(2,:), P_lims(3,:),'b*','LineWidth',5)
     [P_inter_TAR_plot, los_inter_TAR_plot] = intersect_fov_sphere(pos_c2t_TAR, dcm_TAR2CAM, R, fov, nper, false);
+    nper = size(P_inter_TAR_plot,2);
     scatter3(P_inter_TAR_plot(1,:), P_inter_TAR_plot(2,:), P_inter_TAR_plot(3,:),'r')
     quiver3(P_inter_TAR_plot(1,:), P_inter_TAR_plot(2,:), P_inter_TAR_plot(3,:), ...
         k2*los_inter_TAR_plot(1, :), k2*los_inter_TAR_plot(2, :), k2*los_inter_TAR_plot(3, :),'r','LineWidth',1,'MarkerSize',1)
