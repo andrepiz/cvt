@@ -10,7 +10,10 @@ if ~exist('flag_debug','var')
     flag_debug = false;
 end
 
-nper = 20*round(1/tol);
+if tol == 0
+    error('Tolerance must be larger than 0')
+end
+nper = max(1, 20*ceil(1/tol));
 
 err = tol;
 lon_lims = pi/2*[-1 1];
