@@ -14,7 +14,7 @@ end
 zvec = zeros(1, nper);
 switch length(fov)
     case 1 
-        lvec1 = linspace(0, 1, nper);
+        lvec1 = linspace(1, 0, nper);
         ovec = ones(1, nper);
         roll_vec = 0.5*fov*ovec;
         pitch_vec = zvec;

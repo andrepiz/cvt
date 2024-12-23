@@ -53,7 +53,7 @@ P_lims = P_inter_TAR(:, ixs_lims);
 bsDir_TAR = dcm_TAR2CAM'*[0;0;1];
 d_c2t = norm(pos_c2t_TAR);
 dir_c2t_TAR = pos_c2t_TAR./d_c2t;
-phase_angle = acos(-dir_c2t_TAR(1));
+phase_angle = atan2(-dir_c2t_TAR(2),-dir_c2t_TAR(1));
 
 if ninter == 0
     % No intersections found means either the FOV do not cross at all or it entirely
