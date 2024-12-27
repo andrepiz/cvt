@@ -44,6 +44,7 @@ end
 
        
 if flag_debug
+    zvec = zeros(1, nper);
     figure(), grid on, hold on, axis equal
     quiver3(zvec, zvec, zvec, per(1, :), per(2, :), per(3, :))
     xlabel('x'), ylabel('y'), zlabel('z'), view([10, 20])
