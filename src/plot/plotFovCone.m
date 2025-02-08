@@ -3,7 +3,7 @@ function p = plotFovCone(posCam_CAM, dcm_REF2CAM, fov, h, b, col, alpha)
 % b: base
 
 npc = 20 + 1;
-sh = 10;    %scale factor for fov length wrt height
+sh = 1;    %scale factor for fov length wrt height
 % create cylnder
 B = tan(fov/2)*h + b; % baffle major base
 SB = (sh*(B-b)+b)/B; %scale factor for major base given sh
