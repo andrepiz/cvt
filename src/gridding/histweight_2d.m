@@ -1,5 +1,5 @@
 function [bins, counts] = histweight_2d(dCoords, dValues, dLimits, dGranularity, ...
-    i32Algorithm, bFlagProgress, bVECTORIZED, bDEBUG_MODE, dGaussianSigma, dWindowSize)%#codegen
+    i32Algorithm, bFlagProgress, bVECTORIZED, bDEBUG_MODE, dGaussianSigma, dWindowSize, bSnapPointsInsideLimits)%#codegen
 % HISTWEIGHT weights and bin scattered data points into uniform quantiles of 
 % specified granularity within the specified limits. 
 % Each data point is expressed in D-dimensional coordinates and has an 
@@ -37,13 +37,12 @@ arguments
     dGranularity   (1, 1) double {isscalar} = 1 % uint32?
     i32Algorithm   (1, :) int32             = 2
     bFlagProgress  (1, 1) logical           = false;
-    bVECTORIZED    (1, 1) logical           = false;
+    bVECTORIZED    (1, 1) logical           = true;
     bDEBUG_MODE    (1, 1) logical           = false;
     dGaussianSigma (1, 1) double {isscalar} = 1/3
     dWindowSize    (1, 1) double {isscalar} = 1;
+    bSnapPointsInsideLimits (1, 1) logical = false;
 end
-
-tic
 
 % Preliminary checks
 ui32CoordRowSize = uint32(size(dCoords, 1));
@@ -140,17 +139,26 @@ for ii = 1:ui32CoordColSize
                 % Find index of sector
                 sector_idx = ceil(dCenterPoints(:, ii) + centers2vertexes(jj, :)'); % vectorizable: OK
 
-                % Snapping index out of the range to closest neighbours
-                sector_idx_sat = max( dCoordRanges(:, 1), min( sector_idx, dCoordRanges(:, 2)) );
+                if ~bSnapPointsInsideLimits
+                    if sector_idx(1) < dCoordRanges(1,1) || ...
+                        sector_idx(1) > dCoordRanges(1,2) || ...
+                        sector_idx(2) < dCoordRanges(2,1) || ...
+                        sector_idx(2) > dCoordRanges(2,2)
+                        continue
+                    else
+                        sector_idx_sat = sector_idx;
+                    end
+                else
+                    % Snapping index out of the range to closest neighbours
+                    sector_idx_sat = max( dCoordRanges(:, 1), min( sector_idx, dCoordRanges(:, 2)) );
+                end
 
-                % neighbour_idx_cell = num2cell(sector_idx_sat)';
                 idR = sector_idx_sat(1);
                 idC = sector_idx_sat(2);
 
                 bins(idR, idC) = bins(idR, idC) + dValues(ii)*dw(jj);
 
                 counts(idR, idC) = counts(idR, idC) + 1;
-
             end
         end
 
@@ -163,12 +171,18 @@ for ii = 1:ui32CoordColSize
         % sector_idx_vectorized = zeros(size(centers2vertexes_reduced'), 'double');
         sector_idx_vectorized = ceil(dCenterPoints(:, ii) + centers2vertexes_reduced'); % vectorizable
 
-        % Enforce bounds for sector_idx
-        sector_idx_bounder_vectorized = max(dCoordRanges(:, 1), min( sector_idx_vectorized, dCoordRanges(:, 2)) );
+        if bSnapPointsInsideLimits
+            % Enforce bounds for sector_idx
+            sector_idx_bounded_vectorized = max(dCoordRanges(:, 1), min( sector_idx_vectorized, dCoordRanges(:, 2)) );
+        else
+            ixs_outside_lims = sector_idx_vectorized(1,:) < dCoordRanges(1,1) || sector_idx_vectorized(1,:) > dCoordRanges(1,2) || ...
+                        sector_idx_vectorized(2,:) < dCoordRanges(2,1) || sector_idx_vectorized(2,:) > dCoordRanges(2,2);
+            sector_idx_bounded_vectorized = sector_idx_bounded_vectorized(ixs_outside_lims);
+        end
 
         % DEVNOTE: memory access using (1,:) is slower than (:,1)
         % Get allocation linear indices
-        linearIdx = sub2ind(dCoordRanges(:, 2)', sector_idx_bounder_vectorized(1, :), sector_idx_bounder_vectorized(2, :));
+        linearIdx = sub2ind(dCoordRanges(:, 2)', sector_idx_bounded_vectorized(1, :), sector_idx_bounded_vectorized(2, :));
         
         % Allocate values
         bins(linearIdx) = bins(linearIdx) + dValues(ii).*dw_reduced; % Allocate dWeightedValues for each ii in all indexed entries of bins

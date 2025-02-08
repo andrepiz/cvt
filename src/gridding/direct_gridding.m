@@ -40,10 +40,8 @@ switch chMethod
         end
         if bParallelization
             [valsPixel_scaled_fine, counts, edges] = parhistweight_2d(dCoords, vals_scaled, dLimits, dGranularity, i32Algorithm, ui8Workers, 1/3, dWindow);
-            %[valsPixel_scaled_fine, counts, edges] = parhistweight(dCoords, vals_scaled, dLimits, dGranularity, 'method', chAlgorithm, 'window', dWindow, 'nthreads',ui8Workers);
         else
             [valsPixel_scaled_fine, counts] = histweight_2d(dCoords, vals_scaled, dLimits, dGranularity, i32Algorithm, false, false, false, 1/3, dWindow);
-            %[valsPixel_scaled_fine, counts, edges] = histweight(dCoords, vals_scaled, dLimits, dGranularity, 'method', chAlgorithm,'window', dWindow);
         end
 
     case 'interpolation'

@@ -1,6 +1,6 @@
-function [phi1, phi2, hphi, err] = sample_sphere_projected_uniform(alpha, nhphi, philims)
+function [phi1, phi2, hphi, err] = sample_sphere_projected_uniform(phase_angle, nhphi, philims)
 % This function sample points between the boundaries of an
-% illuminated sphere at phase angle alpha such that the projection of the
+% illuminated sphere at given phase angle such that the projection of the
 % arcs spanned by the angle intervals is constant on the projection plane.
 % If philims are not specified, [-pi/2 pi/2] are used as limits.
 
@@ -14,11 +14,11 @@ phimax = philims(2);
 % solve the equation linking the consecutive angles with the projection 
 % of the underlined spherical arc on the perpendicular plane 
 
-% 2 * R * sin((phi2-phi1)/2) * cos(alpha - phi2 + (phi2-phi1)/2) = C
+% 2 * R * sin((phi2-phi1)/2) * cos(phase_angle - phi2 + (phi2-phi1)/2) = C
 
 % Parametrizing phi2 = phi1 + hphi
 
-% 2 * R * sin(hphi/2) * cos(alpha - phi1 - hphi/2) = C
+% 2 * R * sin(hphi/2) * cos(phase_angle - phi1 - hphi/2) = C
 
 % Solving iteratively:
 % 1. phi1 = phi1min
@@ -27,27 +27,27 @@ phimax = philims(2);
 % 4. start again from 2.
 
 % When phi1 = phi1min and phi2 = phi2max, C is equal to the projected illuminated horizon 
-% C = 2 * R * sin(phi_span/2) * cos(alpha - phi2max + phi_span/2)
+% C = 2 * R * sin(phi_span/2) * cos(phase_angle - phi2max + phi_span/2)
 
 % So if we want to discretize in n_sectors, we will use C/n
-% 2 * R * sin(hphi/2) * cos(alpha - phi1 - hphi/2) = 1/n * (2 * R * sin(phi_span/2) * cos(alpha - phi2max + phi_span/2))
+% 2 * R * sin(hphi/2) * cos(phase_angle - phi1 - hphi/2) = 1/n * (2 * R * sin(phi_span/2) * cos(phase_angle - phi2max + phi_span/2))
 
 % Dividing by 2 * R and re-arranging:
-% n * (sin(hphi/2) * cos(alpha - phi1 - hphi/2)) - sin(phi_span/2) * cos(alpha - phi2max + phi_span/2) = 0
+% n * (sin(hphi/2) * cos(phase_angle - phi1 - hphi/2)) - sin(phi_span/2) * cos(phase_angle - phi2max + phi_span/2) = 0
 
-if alpha >= 0
-    phi1min = max(alpha - pi/2, phimin);
+if phase_angle >= 0
+    phi1min = max(phase_angle - pi/2, phimin);
     phi2max = phimax;
 else
     phi1min = phimin;
-    phi2max = min(alpha + pi/2, phimax);
+    phi2max = min(phase_angle + pi/2, phimax);
 end
 
 phi_span = phi2max - phi1min;
 
 % Objective functions
-fun_obj_phi1 = @(hphi, alpha, phi1, n) n*sin(hphi/2).*cos(alpha - phi1 - hphi/2) - sin(phi_span/2) * cos(alpha - phi2max + phi_span/2);
-fun_obj_phi2 = @(hphi, alpha, phi2, n) n*sin(hphi/2).*cos(alpha - phi2 + hphi/2) - sin(phi_span/2) * cos(alpha - phi2max + phi_span/2);
+fun_obj_phi1 = @(hphi, phase_angle, phi1, n) n*sin(hphi/2).*cos(phase_angle - phi1 - hphi/2) - sin(phi_span/2) * cos(phase_angle - phi2max + phi_span/2);
+fun_obj_phi2 = @(hphi, phase_angle, phi2, n) n*sin(hphi/2).*cos(phase_angle - phi2 + hphi/2) - sin(phi_span/2) * cos(phase_angle - phi2max + phi_span/2);
 
 % init
 phi1 = zeros(1, nhphi);
@@ -58,10 +58,10 @@ phi1(1) = phi1min;
 phi2(end) = phi2max;
 hphi_temp = phi_span/nhphi;
 
-if alpha >= 0
+if phase_angle >= 0
     % Forward
     for i = 1:nhphi-1
-        fun_zero = @(x) fun_obj_phi1(x, alpha, phi1(i), nhphi);
+        fun_zero = @(x) fun_obj_phi1(x, phase_angle, phi1(i), nhphi);
         [hphi(i), ~] = fzero(fun_zero, hphi_temp);
         if hphi(i) < 0
             % correction in case step is negative
@@ -75,10 +75,10 @@ if alpha >= 0
     hphi(end) = phi2(end) - phi1(end);
     err = abs(sum(hphi)) - abs(phi_span);
 
-elseif alpha < 0
+elseif phase_angle < 0
     % Backward
     for i = nhphi:-1:2
-        fun_zero = @(x) fun_obj_phi2(x, alpha, phi2(i), nhphi);
+        fun_zero = @(x) fun_obj_phi2(x, phase_angle, phi2(i), nhphi);
         [hphi(i), ~] = fzero(fun_zero, hphi_temp);
         if hphi(i) < 0
             % correction in case step is negative
