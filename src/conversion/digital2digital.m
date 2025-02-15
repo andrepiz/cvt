@@ -17,7 +17,7 @@ switch nbit_out
         img_digital_out = uint32(img_digital_out);
     otherwise
         img_digital_out = round(img_digital_out);
-        nbit_out_new = 8*ceil(nbit_out/8);
+        nbit_out_new = 8*max(1, floor(nbit_out/8));
         warning([num2str(nbit_out) '-bit image not allowed, image will be saved in ',num2str(nbit_out_new),'-bit'])
         img_digital_out = digital2digital(img_digital_out, nbit_in, nbit_out_new);
 end

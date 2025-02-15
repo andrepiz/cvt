@@ -20,6 +20,8 @@ ny = limits(2,2)*granularity;
 xsubedges = {linspace(limits(1,1) - 1, nx/granularity, nx + 1)};
 ysubedges = {linspace(limits(2,1) - 1, ny/granularity, ny + 1)};
 c = 1;
+xstep = floor(nx/c);
+ystep = floor(ny/c);
 while any(cellfun(@(x) length(x), xsubedges) > 1024) || any(cellfun(@(x) length(x), ysubedges) > 1024)
     % Partition into submatrices
     xstep = floor(nx/(c + 1));

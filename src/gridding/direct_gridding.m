@@ -21,11 +21,12 @@ end
 
 
 % Scaling of values
-vals_scaled = dValues*dGranularity;
+dValsScaled = dValues*dGranularity;
 
 switch chMethod
     case 'sum'
-        [valsPixel_scaled_fine, counts, edges] = quantization(dCoords, vals_scaled, dLimits, dGranularity, 'method', 'sum');
+
+        valsPixelScaledFine = histsum_2d(dCoords, dValsScaled, dLimits, dGranularity);
 
     case 'weightedsum'
         switch chAlgorithm
@@ -38,17 +39,21 @@ switch chMethod
             case 'gaussian'
                 i32Algorithm = 3;
         end
-        if bParallelization
-            [valsPixel_scaled_fine, counts, edges] = parhistweight_2d(dCoords, vals_scaled, dLimits, dGranularity, i32Algorithm, ui8Workers, 1/3, dWindow);
+        if bParallelization && length(dValsScaled) > 1e6    % Over about 1M points the parallelization version is not faster
+             valsPixelScaledFine = parhistweight_2d(dCoords, dValsScaled, dLimits, dGranularity, ...
+                                                    i32Algorithm, dWindow, 1/2, ...
+                                                    false, ui8Workers);
         else
-            [valsPixel_scaled_fine, counts] = histweight_2d(dCoords, vals_scaled, dLimits, dGranularity, i32Algorithm, false, false, false, 1/3, dWindow);
+             valsPixelScaledFine = histweight_2d(dCoords, dValsScaled, dLimits, dGranularity, ...
+                                                 i32Algorithm, dWindow, 1/2, ...
+                                                 false);
         end
 
     case 'interpolation'
-        [valsPixel_scaled_fine, counts, edges] = quantization(dCoords, vals_scaled, dLimits, dGranularity, 'method', chScheme);
+        valsPixelScaledFine = quantization(dCoords, dValsScaled, dLimits, dGranularity, 'method', chScheme);
 
     case 'shiftedsum'
-        [valsPixel_scaled_fine, counts, edges] = shiftedquantization(dCoords, vals_scaled, dLimits, dGranularity, 'method', 'sum', 'shift', dShift);
+        valsPixelScaledFine = shiftedquantization(dCoords, dValsScaled, dLimits, dGranularity, 'method', 'sum', 'shift', dShift);
 
     case 'weightedshiftedsum'
         switch chAlgorithm
@@ -57,30 +62,30 @@ switch chMethod
             otherwise
                 error('Gridding filter not supported')
         end
-        [valsPixel_scaled_fine, counts, edges] = shiftedquantization(dCoords, vals_scaled, dLimits, dGranularity, 'method', 'sum', 'shift', dShift, 'weight', kern_gridding);
+        valsPixelScaledFine = shiftedquantization(dCoords, dValsScaled, dLimits, dGranularity, 'method', 'sum', 'shift', dShift, 'weight', kern_gridding);
 
     otherwise
         error('Gridding method not recognized')
 end
 
 if dGranularity == 1
-    valsPixel_scaled = valsPixel_scaled_fine;
+    valsPixelScaled = valsPixelScaledFine;
 else
     if bAntialiasing
        kern_antialiasing = gaussianKernel(dGranularity, sqrt(dGranularity), false);
     else
        kern_antialiasing = [];
     end
-    valsPixel_scaled = downsamplingreconstruction(valsPixel_scaled_fine, dGranularity, kern_antialiasing, chFilter, dGranularity);
-    valsPixel_scaled(valsPixel_scaled<0) = 0;
+    valsPixelScaled = downsamplingreconstruction(valsPixelScaledFine, dGranularity, kern_antialiasing, chFilter, dGranularity);
+    valsPixelScaled(valsPixelScaled<0) = 0;
 end
 
 % removing nans
-ixsNan = isnan(valsPixel_scaled);
-valsPixel_scaled(ixsNan) = 0;
+ixsNan = isnan(valsPixelScaled);
+valsPixelScaled(ixsNan) = 0;
 
 % Reapply scaling factor
-mat = valsPixel_scaled/dGranularity;
+mat = valsPixelScaled/dGranularity;
 maskValid = ~ixsNan;
 
 end
