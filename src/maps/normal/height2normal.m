@@ -11,16 +11,28 @@ function [normal, debug] = height2normal(longrid, latgrid, height, params)
 % params.fitting_error_threshold [1]    If plane fitting error is larger than 
 %                                       this threshold, the normal is computed as the mean of the normals of the
 %                                       neighbouring triangles
+% params.frame [body/local]             If body frame is selected, the normal is stored defined in the body-fixed frame
+%                                       If local frame is selected, angles of the normal are computed with 
+%                                       respect to the east direction (red channel), north direction (green channel) 
+%                                       and up direction (blue channel) in the local frame
+%                                       
 % OUTPUTS:
 % normal [u, v, 3]                      Map of 3d normals at each longitude and
 %                                       latitude
 % debug
 
-if ~exist('params.flag_debug','var')
+if ~exist('params','var')
+    params = struct();
+end
+if ~isfield(params,'flag_debug')
     params.flag_debug = false;
 end
-if ~exist('params.fitting_error_threshold','var')
-    params.fitting_error_threshold = 0.002; 
+if ~isfield(params,'fitting_error_threshold')
+    md = median(abs([reshape(diff(height, [], 1), 1, []), reshape(diff(height, [], 2), 1, [])]));
+    params.fitting_error_threshold = 1e-5*md;
+end
+if ~isfield(params,'frame')
+    params.frame = 'local'; 
 end
 
 if params.flag_debug
@@ -90,31 +102,55 @@ for ii = 1:nlon
             pts = [x; y; z];
             vec = pts - repmat(cartMid, 1, size(A, 1));
             
-            % figure(), hold on, for ix = 1:size(A,1), quiver3(pts(1,ix), pts(2,ix), pts(3,ix), vec(1,ix), vec(2,ix), vec(3,ix)), text(pts(1,ix), pts(2,ix), pts(3,ix), num2str(ix)), end
+            %figure(), hold on, for ix = 1:size(A,1), quiver3(pts(1,ix), pts(2,ix), pts(3,ix), vec(1,ix), vec(2,ix), vec(3,ix)), text(pts(1,ix), pts(2,ix), pts(3,ix), num2str(ix)), end
+
+            vec = vecnormalize(vec);
 
             switch size(A, 1)
                 case 9
                     vec_cross = cross(vec(:, [3 6 9 8 7 4 1 2]), vec(:, [6 9 8 7 4 1 2 3]));
                 case 6
-                    if abs(sum(vec(:, 2))) < eps
+                    if isnan(sum(vec(:, 2)))
                         vec_cross = cross(vec(:, [3 6 5 4]), vec(:, [6 5 4 1]));
-                    elseif abs(sum(vec(:, 5))) < eps
+                    elseif isnan(sum(vec(:, 3)))
+                        vec_cross = cross(vec(:, [1 2 4 6]), vec(:, [2 4 6 5]));
+                    elseif isnan(sum(vec(:, 4)))
+                        vec_cross = cross(vec(:, [2 1 3 5]), vec(:, [1 3 5 6]));
+                    elseif isnan(sum(vec(:, 5)))
                         vec_cross = cross(vec(:, [4 1 2 3]), vec(:, [1 2 3 6]));
                     else
                         error(['Singularity detected at point (', num2str(ii), ',',num2str(jj),')'])
                     end
+                    % if abs(sum(vec(:, 2))) < eps
+                    %     vec_cross = cross(vec(:, [3 6 5 4]), vec(:, [6 5 4 1]));
+                    % elseif abs(sum(vec(:, 5))) < eps
+                    %     vec_cross = cross(vec(:, [4 1 2 3]), vec(:, [1 2 3 6]));
+                    % else
+                    %     error(['Singularity detected at point (', num2str(ii), ',',num2str(jj),')'])
+                    % end
                 case 4
-                    if abs(sum(vec(:, 1))) < eps
+                    if isnan(sum(vec(:, 1)))
                         vec_cross = cross(vec(:, [2 4]), vec(:, [4 3]));
-                    elseif abs(sum(vec(:, 2))) < eps
+                    elseif isnan(sum(vec(:, 2)))
                         vec_cross = cross(vec(:, [4 3]), vec(:, [3 1]));
-                    elseif abs(sum(vec(:, 3))) < eps
+                    elseif isnan(sum(vec(:, 3)))
                         vec_cross = cross(vec(:, [1 2]), vec(:, [2 4]));
-                    elseif abs(sum(vec(:, 4))) < eps                   
+                    elseif isnan(sum(vec(:, 4)))                  
                         vec_cross = cross(vec(:, [3 1]), vec(:, [1 2]));
                     else
                         error(['Singularity detected at point (', num2str(ii), ',',num2str(jj),')'])
                     end
+                    % if abs(sum(vec(:, 1))) < eps
+                    %     vec_cross = cross(vec(:, [2 4]), vec(:, [4 3]));
+                    % elseif abs(sum(vec(:, 2))) < eps
+                    %     vec_cross = cross(vec(:, [4 3]), vec(:, [3 1]));
+                    % elseif abs(sum(vec(:, 3))) < eps
+                    %     vec_cross = cross(vec(:, [1 2]), vec(:, [2 4]));
+                    % elseif abs(sum(vec(:, 4))) < eps                   
+                    %     vec_cross = cross(vec(:, [3 1]), vec(:, [1 2]));
+                    % else
+                    %     error(['Singularity detected at point (', num2str(ii), ',',num2str(jj),')'])
+                    % end
                 otherwise
                     error('Kernel size not allowed')
             end
@@ -140,7 +176,18 @@ for ii = 1:nlon
             vec_normalized = -vec_normalized;
         end
 
-        normal(jj, ii, 1:3) = vec_normalized;
+        switch params.frame
+            case 'body'
+                rgb = vec_normalized;
+            case 'local'
+                [north, east, down] = loc2ned(cartMid);
+                rgb(1) = dot(vec_normalized, east);
+                rgb(2) = dot(vec_normalized, north);
+                rgb(3) = dot(vec_normalized, -down);
+            otherwise
+                error('Frame not recognized. Use body or local options')
+        end
+        normal(jj, ii, 1:3) = rgb;
 
         clear sphKern
 
