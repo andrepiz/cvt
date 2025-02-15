@@ -5,6 +5,7 @@ function mat_out = matop(mat_in, op, varargin)
 % 'domain' [l, u]: re-map to a new domain with l and u as bounds
 % 'gamma' [g]: multiply to the power of g
 % 'mean' [m]: scale such that mean becomes m
+% 'shift' [s]: shift of a quantity s
 % If varargin is empty, returns the original matrix
 
 if iscell(op) && length(varargin)==length(op)
@@ -33,6 +34,8 @@ switch op
         end
     case 'scale'
         mat_out = varargin{1}.*mat_in;
+    case 'shift'
+        mat_out = varargin{1}+mat_in;
     case 'domain'
         m_in = min(mat_in, [],'all');
         M_in = max(mat_in, [],'all');
