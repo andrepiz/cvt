@@ -26,7 +26,8 @@ active = zeros(size(latgrid));
 
 % cycling through latitudes
 parfor (ii = 1:nlat, nthreads)
-    pos_t2p_TAR = cart_coord([repmat(Rbody, 1, nlon); longrid(ii, :); latgrid(ii, :)]);
+    Rbody_triaxial = find_triaxial_radius(longrid(ii, :), latgrid(ii, :), Rbody);
+    pos_t2p_TAR = cart_coord([Rbody_triaxial; longrid(ii, :); latgrid(ii, :)]);
     N = vecnormalize(dcm_TAR2CAM*pos_t2p_TAR); % assumed radial direction
     Vinc = -vecnormalize(dcm_TAR2CAM*(pos_l2t_TAR + pos_t2p_TAR)); % dir_p2s_CAM
     Vref = -vecnormalize(dcm_TAR2CAM*(pos_c2t_TAR + pos_t2p_TAR)); % dir_p2c_CAM
@@ -83,7 +84,7 @@ if flag_debug
     % 3D
     dir_t2c_TAR = -vecnormalize(pos_c2t_TAR);
     cover = uint8((active+1)/2*(2^8-1));
-    k = 1/Rbody; % scaling factor
+    k = 1/Rbody(1); % scaling factor
 
     R_frames2ref(:,:,1) = eye(3);
     R_frames2ref(:,:,2) = dcm_TAR2CAM';

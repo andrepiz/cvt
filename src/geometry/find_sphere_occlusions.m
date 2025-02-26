@@ -18,8 +18,8 @@ switch method_intersection
     case 'sampling'
         nhl = size(dir_r2p, 2);
         % Sample the ray
-        ray_span_max = Rsph*tan(rays_span_angle);
-        ray_span_min = Rsph*pi/2/min(size(dem.Values));   % half the span of a pixel of DEM map
+        ray_span_max = Rsph(1)*tan(rays_span_angle);
+        ray_span_min = Rsph(1)*pi/2/min(size(dem.Values));   % half the span of a pixel of DEM map
         switch method_sampling
             case 'logspace'
                 ray_span_vec = logspace(log10(ray_span_min), log10(ray_span_max), nrs);
@@ -38,7 +38,7 @@ switch method_intersection
             Elray(ix, :) = sph_t2r(3,:);
         end
         % Interpolate body radius at the sector location of the ray in IAU frame
-        Rray = Rsph + dem(Elray, Azray);
+        Rray = find_triaxial_radius(Azray, Elray, Rsph) + dem(Elray, Azray);
         d_rays = Hray - Rray;
         ixs_occluded = any(d_rays <= 0, 1);
     case 'iterative'
