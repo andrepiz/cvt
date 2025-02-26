@@ -20,10 +20,12 @@ latspan = lat_lims(2) - lat_lims(1);
 hlon = lonspan/v;
 hlat = latspan/u;
 
-% Spanning vectors for interpolants must be sorted
-lonspan = lon_lims(1) + hlon/2:hlon:lon_lims(2) - hlon/2;
-latspan = lat_lims(1) + hlat/2:hlat:lat_lims(2) - hlat/2;
-[latgrid, longrid] =  ndgrid(latspan, lonspan);
+% The map values are assumed to be centered on the middle of the pixel
+% Note: spanning vectors for interpolants must be sorted
+% Note: boundaries must still be at defined limits to avoid gaps
+lonspanvec = [lon_lims(1), lon_lims(1) + 1.5*hlon:hlon:lon_lims(2) - 1.5*hlon, lon_lims(2)];
+latspanvec = [lat_lims(1), lat_lims(1) + 1.5*hlat:hlat:lat_lims(2) - 1.5*hlat, lat_lims(2)];
+[latgrid, longrid] =  ndgrid(latspanvec, lonspanvec);
 
 % map must be flipped upside down so to have increasing altitude with
 % increasing rows
