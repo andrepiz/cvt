@@ -2,7 +2,7 @@ function p = plotFovFrustum(posCam_REF, dcm_CAM2REF, fov, h, col, alpha)
 % h: height
 % b: base
 
-sh = 10;    %scale factor for fov length wrt height
+sh = 1;    %scale factor for fov length wrt height
 
 % Apex point (top of the pyramid)
 apx_CAM = [0, 0, 0];
