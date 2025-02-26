@@ -43,7 +43,7 @@ end
 
 % init
 [nlat, nlon] = size(height);
-normal = zeros(nlat, nlon, 3);
+normal = repmat(0*height, 1, 1, 3);
 
 for ii = 1:nlon
 

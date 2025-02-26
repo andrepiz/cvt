@@ -87,9 +87,9 @@ if flag_plot
 
     clmin = min([min(Limg(:)),min(Cimg(:)),min(Simg(:))]);
 
-    figure('name',['luminance_',num2str(L)])    
+    f1 = figure('name',['luminance_',num2str(L)]); 
     hL = imshow(Limg);
-    colormap(cmap)
+    colormap(f1, cmap)
     hL.AlphaData = 0*mask_noise + 1*~mask_noise;
     cb = colorbar();
     clim([clmin, 1])
@@ -99,9 +99,9 @@ if flag_plot
     cb.TickLabelInterpreter = "latex";
     cb.Label.Interpreter = "latex";
 
-    figure('name',['contrast',num2str(C)])    
+    f2 = figure('name',['contrast_',num2str(C)]);
     hC = imshow(Cimg);
-    colormap(cmap)
+    colormap(f2, cmap)
     hC.AlphaData = 0*mask_noise + 1*~mask_noise;
     cb = colorbar();
     clim([clmin, 1])
@@ -111,9 +111,9 @@ if flag_plot
     cb.TickLabelInterpreter = "latex";
     cb.Label.Interpreter = "latex";
 
-    figure('name',['structure_',num2str(S)])    
+    f3 = figure('name',['structure_',num2str(S)]);
     hS = imshow(Simg);
-    colormap(cmap)
+    colormap(f3, cmap)
     hS.AlphaData = 0*mask_noise + 1*~mask_noise;
     cb = colorbar();
     clim([clmin, 1])

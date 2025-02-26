@@ -3,6 +3,8 @@ function noise = noise_readout(ec_in, fwc, sigma, seed)
 % Readout noise is assumed Gaussian distribution, mean value equal to zero.
 % Typical figure of standard deviation is 100 electrons for a 74000 FWC,
 % about 2%.
+% EMVA1288 Standard reports about 2.5 electrons CMOS and 8-10 electrons
+% CCD
 
 if exist('seed', 'var')
     if ~isempty(seed)

@@ -38,6 +38,8 @@ switch chMethod
                 i32Algorithm = 2;
             case 'gaussian'
                 i32Algorithm = 3;
+            otherwise
+                error('Weighted sum algorithm not recognized')
         end
         if bParallelization && length(dValsScaled) > 1e6    % Over about 1M points the parallelization version is not faster
              valsPixelScaledFine = parhistweight_2d(dCoords, dValsScaled, dLimits, dGranularity, ...
