@@ -1,7 +1,11 @@
-function [normal, rgb] = dem2normal(filepath_dem, filepath_normal, Rbody, dem_scaling, frame_normal, nbit_normal, flag_remove_outlier, flag_parallel, flag_double_prec, flag_plot)
+function [normal, rgb] = dem2normal(filepath_dem, filepath_normal, Rbody, dem_scaling, frame_normal, nbit_normal, flag_remove_outlier, flag_double_prec, flag_plot, flag_debug)
 
 if ~exist('flag_remove_outlier','var')
     flag_remove_outlier = true;
+end
+
+if ~exist('flag_debug','var')
+    flag_debug = false;
 end
 
 dem_data = imread(filepath_dem);
@@ -18,13 +22,15 @@ if flag_remove_outlier
     end
 end
 
-lon = cast(linspace(-pi, pi, size(dem_map, 2)), class(dem_data)); % increasing columns are increasing longitudes
-lat = cast(linspace(pi/2, -pi/2, size(dem_map, 1)), class(dem_data)); % increasing rows are decreasing latitudes
+hlon = 2*pi/size(dem_map, 2);
+hlat = pi/size(dem_map, 1);
+lon = cast(-pi+hlon/2:hlon:pi-hlon/2, class(dem_data)); % increasing columns are increasing longitudes
+lat = cast(pi/2-hlat/2:-hlat:-pi/2+hlat/2, class(dem_data)); % increasing rows are decreasing latitudes
 [longrid, latgrid] = meshgrid(lon, lat);
 
 height = dem_map + find_triaxial_radius(longrid, latgrid, Rbody);
 
-[normal] = height2normal_vec(longrid, latgrid, height, struct('frame',frame_normal));
+[normal] = height2normal_vec(longrid, latgrid, height, struct('frame',frame_normal,'flag_debug',flag_debug));
 
 rgb = map2rgb(normal, nbit_normal);
 

@@ -28,7 +28,7 @@ if ~isfield(params,'flag_debug')
     params.flag_debug = false;
 end
 if ~isfield(params,'fitting_error_threshold')
-    md = median(abs([reshape(diff(height, [], 1), 1, []), reshape(diff(height, [], 2), 1, [])]));
+    md = mean(abs([reshape(diff(height, [], 1), 1, []), reshape(diff(height, [], 2), 1, [])]));
     params.fitting_error_threshold = 1e-5*md;
 end
 if ~isfield(params,'frame')
@@ -42,6 +42,7 @@ if flag_debug
     fh = figure();
     ax = axes(fh);
     grid on, hold on, axis equal
+    view([1 1 1])
 end
 
 % Sizes
@@ -82,9 +83,9 @@ Nx = cast(zeros(1, np), class(height));
 Ny = Nx;
 Nz = Nx;
 if flag_debug
-    algo(ix) = Nx;
-    err(ix) = Nx;
-    cnd(ix) = Nx;
+    algo = nan(1, np);
+    err = nan(1, np);
+    cnd = nan(1, np);
 else
     algo = [];
     err = [];
@@ -92,18 +93,26 @@ else
 end
 
 parfor ix = 1:np
+%for ix = 1:np
 
-    %[row, col] = ind2sub([nlat, nlon], ix);
+    rkerntemp = rkern(ix, :);
+    azkerntemp = azkern(ix, :);
+    elkerntemp = elkern(ix, :);
 
-    cartKern = cart_coord([rkern(ix, :); azkern(ix, :); elkern(ix, :)]);
-    cartMid = cartKern(:, 5);
+    % Check if points of the kernel are in the same emisphere
+    ixs_same_emisphere = abs(elkerntemp(5) - elkerntemp) <= 0.99*pi;
+    nctemp = sum(ixs_same_emisphere);
+
+    % Extract kernel and mid points
+    cartKern = cart_coord([rkerntemp(ixs_same_emisphere); azkerntemp(ixs_same_emisphere); elkerntemp(ixs_same_emisphere)]);
+    cartMid = cart_coord([rkerntemp(5); azkerntemp(5); elkerntemp(5)]);
 
     x = cartKern(1,:);
     y = cartKern(2,:);
     z = cartKern(3,:);
 
     % Construct the matrix A and vector b for Ax = b
-    A = [x', y', ones(nc, 1)];
+    A = [x', y', ones(nctemp, 1)];
     b = z';
     
     % Solve the least squares problem to find the plane coefficients
@@ -117,16 +126,13 @@ parfor ix = 1:np
         % A vector normal to the plane is [A, B, -1]
         vec_norm = [coeffs(1); coeffs(2); -1];
         algo_temp = 1;
-        % disp(['Plane fitting ', num2str(1e2*(ii)/(Nlon)),'%'])
     else
         % Compute the normal as the mean of the normals of each
         % triangle
         pts = [x; y; z];
-        vec = pts - repmat(cartMid, 1, nc);
-        vec_norm = vec2norm(vec, nc);
-        %figure(), hold on, for ix = 1:size(A,1), quiver3(pts(1,ix), pts(2,ix), pts(3,ix), vec(1,ix), vec(2,ix), vec(3,ix)), text(pts(1,ix), pts(2,ix), pts(3,ix), num2str(ix)), end
+        vec = pts - repmat(cartMid, 1, nctemp);
+        vec_norm = vec2norm(vec, nctemp);
         algo_temp = 2;
-        % disp(['Mean normal ', num2str(1e2*(ii)/(Nlon)),'%'])
     end
 
     % Final normalization
@@ -155,11 +161,24 @@ parfor ix = 1:np
         algo(ix) = algo_temp;
         err(ix) = err_temp;
         cnd(ix) = cond(A);
+
+        % c = 1;
+        % kvec = vecnorm(cartMid);
+        % try
+        % q = vec./vecnorm(vec);
+        % for k = 1:size(A,1)
+        %     pl(c) = quiver3(ax, pts(1,k), pts(2,k), pts(3,k), kvec*q(1,k), kvec*q(2,k), kvec*q(3,k), 1, 'Color','k'); 
+        %     pl(c + 1)= text(ax, pts(1,k), pts(2,k), pts(3,k), num2str(k)); 
+        %     c = c + 2; 
+        % end
+        % catch
+        % end
+        % camtarget(cartMid);
+        % plot3(ax, cartMid(1), cartMid(2), cartMid(3), 'ro');
+        % pl(c) = quiver3(ax, cartMid(1), cartMid(2), cartMid(3), kvec*vec_normalized(1), kvec*vec_normalized(2), kvec*vec_normalized(3), 2, 'Color','g');
+        % drawnow
+        % delete(pl)
     end
-    % if flag_debug
-    %     scatter3(ax, x, y, z, 'o');
-    %     quiver3(ax, cartMid(1), cartMid(2), cartMid(3), vec_normalized(1), vec_normalized(2), vec_normalized(3))
-    % end
     %disp(['Progress: ',num2str(1e2*ix/np),'%'])
 end
 
@@ -173,31 +192,31 @@ debug.cond = cnd;
 end
 
 function vec_norm = vec2norm(vec, sz)
-    vec = vecnormalize(vec);
+    vecn = vecnormalize(vec);
     switch sz
         case 9
-            vec_cross = cross(vec(:, [3 6 9 8 7 4 1 2]), vec(:, [6 9 8 7 4 1 2 3]));
+            vec_cross = cross(vecn(:, [3 6 9 8 7 4 1 2]), vecn(:, [6 9 8 7 4 1 2 3]));
         case 6
-            if isnan(sum(vec(:, 2)))
-                vec_cross = cross(vec(:, [3 6 5 4]), vec(:, [6 5 4 1]));
-            elseif isnan(sum(vec(:, 3)))
-                vec_cross = cross(vec(:, [1 2 4 6]), vec(:, [2 4 6 5]));
-            elseif isnan(sum(vec(:, 4)))
-                vec_cross = cross(vec(:, [2 1 3 5]), vec(:, [1 3 5 6]));
-            elseif isnan(sum(vec(:, 5)))
-                vec_cross = cross(vec(:, [4 1 2 3]), vec(:, [1 2 3 6]));
+            if isnan(sum(vecn(:, 2)))
+                vec_cross = cross(vecn(:, [3 6 5 4]), vecn(:, [6 5 4 1]));
+            elseif isnan(sum(vecn(:, 3)))
+                vec_cross = cross(vecn(:, [1 2 4 6]), vecn(:, [2 4 6 5]));
+            elseif isnan(sum(vecn(:, 4)))
+                vec_cross = cross(vecn(:, [2 1 3 5]), vecn(:, [1 3 5 6]));
+            elseif isnan(sum(vecn(:, 5)))
+                vec_cross = cross(vecn(:, [4 1 2 3]), vecn(:, [1 2 3 6]));
             else
                 error(['Singularity detected at point (', num2str(ii), ',',num2str(jj),')'])
             end
         case 4
-            if isnan(sum(vec(:, 1)))
-                vec_cross = cross(vec(:, [2 4]), vec(:, [4 3]));
-            elseif isnan(sum(vec(:, 2)))
-                vec_cross = cross(vec(:, [4 3]), vec(:, [3 1]));
-            elseif isnan(sum(vec(:, 3)))
-                vec_cross = cross(vec(:, [1 2]), vec(:, [2 4]));
-            elseif isnan(sum(vec(:, 4)))                  
-                vec_cross = cross(vec(:, [3 1]), vec(:, [1 2]));
+            if isnan(sum(vecn(:, 1)))
+                vec_cross = cross(vecn(:, [2 4]), vecn(:, [4 3]));
+            elseif isnan(sum(vecn(:, 2)))
+                vec_cross = cross(vecn(:, [4 3]), vecn(:, [3 1]));
+            elseif isnan(sum(vecn(:, 3)))
+                vec_cross = cross(vecn(:, [1 2]), vecn(:, [2 4]));
+            elseif isnan(sum(vecn(:, 4)))                  
+                vec_cross = cross(vecn(:, [3 1]), vecn(:, [1 2]));
             else
                 error(['Singularity detected at point (', num2str(ii), ',',num2str(jj),')'])
             end
@@ -205,5 +224,5 @@ function vec_norm = vec2norm(vec, sz)
             error('Kernel size not allowed')
     end
     norms = vecnormalize(vec_cross);
-    vec_norm = mean(norms, 2);
+    vec_norm = mean(norms, 2, 'omitnan');
 end

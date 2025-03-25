@@ -36,16 +36,18 @@ phimax = philims(2);
 % n * (sin(hphi/2) * cos(phase_angle - phi1 - hphi/2)) - sin(phi_span/2) * cos(phase_angle - phi2max + phi_span/2) = 0
 
 % Find the number of points to sample with projected-uniform sampling
+% We find left and right limits due to phase angle visibility.
+% What is missing is sampled with uniform sampling
 phi_span = phimax - phimin;
 phi1min = max(phase_angle - pi/2, phimin);
-phi1res = min(0, phi1min - (phase_angle - pi/2));
-n1res = ceil(phi1res/phi_span*nhphi);
-n1res(isnan(n1res)) = 0;
+phi1rem = min(0, phimin - (phase_angle - pi/2));
+n1rem = ceil(abs(phi1rem)/phi_span*nhphi);
+n1rem(isnan(n1rem)) = 0;
 phi2max = min(phase_angle + pi/2, phimax);
-phi2res = max(0, phimax - (phase_angle + pi/2));
-n2res = ceil(phi2res/phi_span*nhphi);
-n2res(isnan(n2res)) = 0;
-nhphi_red = nhphi - n1res - n2res;
+phi2rem = max(0, phimax - (phase_angle + pi/2));
+n2rem = ceil(phi2rem/phi_span*nhphi);
+n2rem(isnan(n2rem)) = 0;
+nhphi_red = nhphi - n1rem - n2rem;
 phi_span_red = phi2max - phi1min;
 
 % Objective functions
@@ -100,15 +102,8 @@ elseif phase_angle < 0
 end
 
 % Fill with uniform sampling the points outside the limits
-hphileft = (phi1min - phimin)/n1res;
-phileft = phimin:hphileft:phi1min;
-phi1left = phileft(1:end-1);
-phi2left = phileft(2:end);
-
-hphiright = (phimax - phi2max)/n2res;
-phiright = phi2max:hphiright:phimax;
-phi1right = phiright(1:end-1);
-phi2right = phiright(2:end);
+[phi1left, phi2left, hphileft] = sample_sphere_uniform(0, n1rem, [phimin phi1min]);
+[phi1right, phi2right, hphiright] = sample_sphere_uniform(0, n2rem, [phi2max phimax]);
 
 % Create final vector
 phi1 = [phi1left, phi1, phi1right];

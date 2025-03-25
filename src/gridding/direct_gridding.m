@@ -1,7 +1,7 @@
 function [mat, maskValid] = direct_gridding(dCoords, dValues, dLimits,...
                                    bParallelization, ui8Workers, ...
                                   chMethod, dWindow, chAlgorithm, chScheme, dShift, ...
-                                  dGranularity, bAntialiasing, chFilter)
+                                  dGranularity, bAntialiasing, chFilter, dSigma)
 
 arguments
     dCoords             (:, :) double {ismatrix}
@@ -17,6 +17,7 @@ arguments
     dGranularity        (1, 1) double {isscalar}  = 1
     bAntialiasing       (1, 1) logical           = false
     chFilter                   char              = 'gaussian'
+    dSigma              (1, 1) double {isscalar}  = 0.5
 end
 
 
@@ -43,11 +44,11 @@ switch chMethod
         end
         if bParallelization && length(dValsScaled) > 1e6    % Over about 1M points the parallelization version is not faster
              valsPixelScaledFine = parhistweight_2d(dCoords, dValsScaled, dLimits, dGranularity, ...
-                                                    i32Algorithm, dWindow, 1/2, ...
+                                                    i32Algorithm, dWindow, dSigma, ...
                                                     false, ui8Workers);
         else
              valsPixelScaledFine = histweight_2d(dCoords, dValsScaled, dLimits, dGranularity, ...
-                                                 i32Algorithm, dWindow, 1/2, ...
+                                                 i32Algorithm, dWindow, dSigma, ...
                                                  false);
         end
 

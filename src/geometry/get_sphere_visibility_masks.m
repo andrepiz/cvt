@@ -36,41 +36,55 @@ end
 
 if flag_debug
 
+    customMap1 = [0.6, 0.6, 0.6;
+                0.9 0.9 0]; 
+
+    customMap2 = [0.6, 0.2, 0.2;
+                0.2, 0.6, 0.2;
+                0.2, 0.2, 0.6;
+                0.8 0.8 0.8]; 
+
     % MASKS
     fh = figure(); 
     subplot(1,3,1)
     grid on, hold on
-    imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), 0.25*infov)
+    imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), infov)
     xlabel('lon_{TAR}')
     ylabel('lat_{TAR}')
     fh.CurrentAxes.YDir = 'normal';
     cb = colorbar;
-    cb.Ticks = [0, 0.25];
+    cb.Ticks = [0.25, 0.75];
     cb.TickLabels = {'Out of FOV','In FOV'};
+    colormap(customMap1)
+    clim([0 1])
 
     subplot(1,3,2)
     grid on, hold on
-    imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), 0.5*observable)
+    imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), observable)
     xlabel('lon_{TAR}')
     ylabel('lat_{TAR}')
     fh.CurrentAxes.YDir = 'normal';
     cb = colorbar;
-    cb.Ticks = [0, 0.5];
+    cb.Ticks = [0.25, 0.75];
     cb.TickLabels = {'Unobservable','Observable'};
+    colormap(customMap1)
+    clim([0 1])
 
     subplot(1,3,3)
     grid on, hold on
-    imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), 0.75*lit)
+    imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), lit)
     xlabel('lon_{TAR}')
     ylabel('lat_{TAR}')
     fh.CurrentAxes.YDir = 'normal';
     cb = colorbar;
-    cb.Ticks = [0, 0.75];
+    cb.Ticks = [0.25, 0.75];
     cb.TickLabels = {'Obscured','Lit'};
+    colormap(customMap1)
+    clim([0 1])
 
     fh = figure(); 
     grid on, hold on
-    im1 = imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), active); im1.AlphaData = 1;
+    im1 = imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), active); im1.AlphaData = 0.3;
     im2 = imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), 0.25*infov); im2.AlphaData = 0.3;
     im3 = imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), 0.5*observable); im3.AlphaData = 0.3;
     im4 = imagesc(rad2deg(longrid(1,:)), rad2deg(latgrid(:,1)'), 0.75*lit); im4.AlphaData = 0.3;
@@ -78,8 +92,10 @@ if flag_debug
     ylabel('lat_{TAR}')
     fh.CurrentAxes.YDir = 'normal';
     cb = colorbar;
-    cb.Ticks = [0, 1];
+    cb.Ticks = [0 1];
     cb.TickLabels = {'Inactive','Active'};
+    colormap(customMap2)
+    clim([0 1])
 
     % 3D
     dir_t2c_TAR = -vecnormalize(pos_c2t_TAR);
