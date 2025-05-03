@@ -46,13 +46,13 @@ rectangle('Position', [x, y, w, h], 'EdgeColor', 'r', 'LineWidth', lw);
 ax2 = axes(fh, 'units','normalized','Position', winPos);
 surf(xx, yy, zeros(size(zz)), zz, 'EdgeColor','none')
 view(0, 90)
-set(gca,'YDir','reverse')
+set(gca,'YDir',ax1.YDir,'ColorScale',ax1.ColorScale)
 colormap(ax1.Colormap)
 clim(clim(ax1))
 xlim([x, x + w]);
 ylim([y, y + h]);
-set(gca, 'XTickLabel', []);
-set(gca, 'YTickLabel', []);
+set(ax2, 'XTickLabel', []);
+set(ax2, 'YTickLabel', []);
 
 % Convert ax2 position from figure coordinates to ax1 coordinates
 pos1 = ax1.Position; % [x, y, width, height] in normalized figure coordinates

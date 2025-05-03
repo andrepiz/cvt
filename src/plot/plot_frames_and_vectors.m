@@ -42,7 +42,7 @@ end
 % random colors
 %col = rand(m+n, 3);
 col = get(gca, 'ColorOrder');
-
+col = interp1(linspace(0, 1, size(col,1)), col, linspace(0, 1, n+m+1));
 for i = 1:n
     c = col(i,:);
     R = R_frames2ref(:,:,i);
