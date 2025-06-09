@@ -51,6 +51,7 @@ lims  = [(dLimits(:,1)-1)*dGranularity, dLimits(:, 2)*dGranularity];
 nrows = lims(1,2);
 ncols = lims(2,2);
 nneighbors = size(dNeighborShifts, 1); 
+bins = zeros(nrows, ncols);
 
 % Check points outside limits
 if bSnapPointsInsideLimits
@@ -65,6 +66,9 @@ else
     vals = dValues(ixs_inside);
 end
 npts = size(pts_bounded, 2);
+if npts == 0
+    return
+end
 
 %-- INDEXES
 
@@ -154,7 +158,6 @@ wvals_all = wvals_mat(mask_inside);
 wvals = accumarray(groups, wvals_all);
 
 % Create final bin
-bins = zeros(nrows, ncols);
 bins(idxs) = wvals;
 
 end

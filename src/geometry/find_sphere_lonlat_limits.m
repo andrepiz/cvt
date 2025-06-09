@@ -48,7 +48,14 @@ end
 % keep only the consecutive intersections
 ixs_nonan = all(~isnan(P_inter_TAR));            % find nans
 ixs_isolated_nonan = ixs_nonan & ~[ixs_nonan(2:end), ixs_nonan(1)];
-P_inter_TAR(:, ixs_isolated_nonan) = [];
+if sum(ixs_isolated_nonan) > 0
+    P_inter_TAR(:, ixs_isolated_nonan) = [];
+    sph(:, ixs_isolated_nonan) = [];
+    [lon_lims(1), ixs_lims(1)] = min(sph(2,:));  % minimum longitude
+    [lon_lims(2), ixs_lims(2)] = max(sph(2,:));  % maximum longitude
+    [lat_lims(1), ixs_lims(3)] = min(sph(3,:));  % minimum latitude
+    [lat_lims(2), ixs_lims(4)] = max(sph(3,:));  % maximum latitude
+end
 
 ninter = sum(~all(isnan(P_inter_TAR)));
 if flag_debug
