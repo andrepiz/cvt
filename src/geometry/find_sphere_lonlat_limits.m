@@ -70,7 +70,7 @@ dir_c2t_TAR = pos_c2t_TAR./d_c2t;
 phase_angle = atan2(-dir_c2t_TAR(2),-dir_c2t_TAR(1));
 [hs_tangency, br_tangency] = find_sphere_tangent_angle(d_c2t, R);
 
-if ninter == 0
+if ninter == 0 || ninter == 1
     % Zero intersections found means either the FOV do not cross at all or it entirely
     % contains the sphere. To understand which situation we are, we check 
     % the angles of the FOV LOS projected on the cam-target plane with 

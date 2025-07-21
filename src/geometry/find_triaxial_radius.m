@@ -19,7 +19,7 @@ end
 
 switch length(R3)
     case 1 % Sphere (only mean radius given)
-        R = R3*ones(size(lat));
+        R = R3*ones(size(lat), 'like', lat);
     
     case 2 % Biaxial Ellipsoid (assume b = a, c is given)
         a = R3(1);
