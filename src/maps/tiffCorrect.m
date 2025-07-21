@@ -1,6 +1,9 @@
 function tiffCorrect(filepath_tiff, filepath_tiff_new, data, bit_depth)
 
 % Create copy of file
+if ~isfolder(fileparts(filepath_tiff_new))
+    mkdir(fileparts(filepath_tiff_new))
+end
 copyfile(filepath_tiff, filepath_tiff_new);
 
 % Define TIFF object

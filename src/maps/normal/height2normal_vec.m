@@ -38,12 +38,6 @@ end
 fitting_error_threshold = params.fitting_error_threshold;
 frame = params.frame;
 flag_debug = params.flag_debug;
-if flag_debug
-    fh = figure();
-    ax = axes(fh);
-    grid on, hold on, axis equal
-    view([1 1 1])
-end
 
 % Sizes
 [nlat, nlon] = size(height);
@@ -55,9 +49,9 @@ kernComb = permn(-kernSize:kernSize, 2);
 nc = size(kernComb, 1);
 
 % Compute kernels spherical coordinates
-azkern = cast(zeros(np, nc), class(height));
-elkern = cast(zeros(np, nc), class(height));
-rkern = cast(zeros(np, nc), class(height));
+azkern = zeros(np, nc, 'like', longrid);
+elkern = azkern;
+rkern = azkern;
 for ix = 1:nc
     % [X, Y] = [latShift, lonShift]
     % [-1, -1] means shift latitudes northward and longitude westwards.
@@ -73,19 +67,24 @@ for ix = 1:nc
     height_shifted = circshift(height, kernComb(ix,:));
     longrid_shifted = circshift(longrid, [0, kernComb(ix,2)]);
     latgrid_shifted = circshift(latgrid, [kernComb(ix,1), 0]);
+    rkern(:, ix) = height_shifted(:);
     azkern(:, ix) = longrid_shifted(:);
     elkern(:, ix) = latgrid_shifted(:);
-    rkern(:, ix) = height_shifted(:);
 end
 
 % Compute normals
-Nx = cast(zeros(1, np), class(height));
+Nx = zeros(1, np, 'like', height);
 Ny = Nx;
 Nz = Nx;
 if flag_debug
-    algo = nan(1, np);
-    err = nan(1, np);
-    cnd = nan(1, np);
+    fh = figure();
+    ax = axes(fh);
+    grid on, hold on, axis equal
+    view([1 1 1])
+
+    algo = zeros(1, np);
+    err = algo;
+    cnd = algo;
 else
     algo = [];
     err = [];
@@ -93,11 +92,11 @@ else
 end
 
 parfor ix = 1:np
-%for ix = 1:np
+% for ix = 1:np
 
-    rkerntemp = rkern(ix, :);
-    azkerntemp = azkern(ix, :);
-    elkerntemp = elkern(ix, :);
+    rkerntemp = double(rkern(ix, :));
+    azkerntemp = double(azkern(ix, :));
+    elkerntemp = double(elkern(ix, :));
 
     % Check if points of the kernel are in the same emisphere
     ixs_same_emisphere = abs(elkerntemp(5) - elkerntemp) <= 0.99*pi;

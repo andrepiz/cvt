@@ -1,4 +1,4 @@
-function F = map2griddedInterpolant(map, lon_lims, lat_lims)
+function [F, hlon, hlat] = map2griddedInterpolant(map, lon_lims, lat_lims)
 % Create a gridded interpolant from a longitude/latitude map.
 % The map is assumed to enter in matrix format with increasing rows going
 % from north to south (90 to -90 degrees) and increasing columns going 
@@ -12,19 +12,19 @@ if ~exist('lat_lims','var')
     lat_lims = [-pi/2, pi/2];
 end
 
-[u, v] = size(map, [1,2]);
+[v, u] = size(map, [1,2]);
 lonspan = lon_lims(2) - lon_lims(1);
 latspan = lat_lims(2) - lat_lims(1);
 
 % Compute the latitude and longitude grid points of a map of size u, v
-hlon = lonspan/v;
-hlat = latspan/u;
+hlon = lonspan/u;
+hlat = latspan/v;
 
 % The map values are assumed to be centered on the middle of the pixel
 % Note: spanning vectors for interpolants must be sorted
 % Note: boundaries must still be at defined limits to avoid gaps
-lonspanvec = [lon_lims(1), lon_lims(1) + 1.5*hlon:hlon:lon_lims(2) - 1.5*hlon, lon_lims(2)];
-latspanvec = [lat_lims(1), lat_lims(1) + 1.5*hlat:hlat:lat_lims(2) - 1.5*hlat, lat_lims(2)];
+lonspanvec = [lon_lims(1), linspace(lon_lims(1) + 1.5*hlon, lon_lims(2) - 1.5*hlon, u - 2), lon_lims(2)];
+latspanvec = [lat_lims(1), linspace(lat_lims(1) + 1.5*hlat, lat_lims(2) - 1.5*hlat, v - 2), lat_lims(2)];
 [latgrid, longrid] =  ndgrid(latspanvec, lonspanvec);
 
 % map must be flipped upside down so to have increasing altitude with
