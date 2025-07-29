@@ -39,13 +39,13 @@ end
 lon_lims = dem_limits(1, :);
 lat_lims = dem_limits(2, :);
 
-[u, v] = size(dem_data, [1, 2]);
+[v, u] = size(dem_data, [1, 2]);
 lonspan = lon_lims(2) - lon_lims(1);
 latspan = lat_lims(2) - lat_lims(1);
 
 % Compute the latitude and longitude grid points of a map of size u, v
-hlon = lonspan/v;
-hlat = latspan/u;
+hlon = lonspan/u;
+hlat = latspan/v;
 
 lon = [lon_lims(1) + 0.5*hlon:hlon:lon_lims(2) - 0.5*hlon];
 lat = [lat_lims(2) - 0.5*hlat:-hlat:lat_lims(1) + 0.5*hlat];
@@ -55,29 +55,35 @@ lat = [lat_lims(2) - 0.5*hlat:-hlat:lat_lims(1) + 0.5*hlat];
 height = dem_data + find_triaxial_radius(longrid, latgrid, Rbody);
 clear dem_data
 
-%max_memory_multipler = (whos('longrid').bytes*9)./(memory().MaxPossibleArrayBytes);
-max_memory_multipler = numel(longrid) / (10e3*10e3);
-if max_memory_multipler > 1
-    split_factor = ceil(max_memory_multipler);
+max_memory_multiplier = numel(longrid) / (10e3*10e3);
+if max_memory_multiplier > 1
+    split_factor = ceil(max_memory_multiplier);
     [rowStart, rowEnd, colStart, colEnd] = submatrixLimits(height, split_factor);
-    normal = zeros(u, v, 3,'like', height);
+    normal = zeros(v, u, 3,'like', height);
     col_margin = 1;
     row_margin = 1;
     c = 0;
     for ii = 1:split_factor
         for jj = 1:split_factor
-            rowIdxs = max(1, rowStart(ii) - row_margin):min(v, rowEnd(ii) + row_margin);
-            colIdxs = max(1, colStart(jj) - col_margin):min(u, colEnd(jj) + col_margin);
+            rowIdxs = max(1, rowStart(ii, jj) - row_margin):min(v, rowEnd(ii, jj) + row_margin);
+            colIdxs = max(1, colStart(ii, jj) - col_margin):min(u, colEnd(ii, jj) + col_margin);
             if flag_parallel
                 normal_temp = height2normal_vec(longrid(rowIdxs, colIdxs), latgrid(rowIdxs, colIdxs), height(rowIdxs, colIdxs), struct('frame',frame_normal,'fitting_error_threshold',fitting_error_threshold));
             else
                 normal_temp = height2normal(longrid(rowIdxs, colIdxs), latgrid(rowIdxs, colIdxs), height(rowIdxs, colIdxs), struct('frame',frame_normal,'fitting_error_threshold',fitting_error_threshold));
             end
-            normal(rowIdxs, colIdxs, :) = normal_temp;
+            subrowIdxs = 1+row_margin:length(rowIdxs)-row_margin;
+            subcolIdxs = 1+col_margin:length(colIdxs)-col_margin;
+            normal(rowIdxs(subrowIdxs), colIdxs(subcolIdxs), :) = normal_temp(subrowIdxs, subcolIdxs, :);
             c = c + 1;
-            disp(['Computing tile ',num2str(c), ' of ', num2str(ii*jj)])
+            disp(['Computing tile ',num2str(c), ' of ', num2str(split_factor^2), ': rows ', num2str(rowIdxs(1)), '-', num2str(rowIdxs(end)), ', columns ', num2str(colIdxs(1)), '-', num2str(colIdxs(end))])
         end
     end
+    % correct meridian boundary with the mean between the two closest meridians
+    normal(:, [1, u], :) = repmat(0.5*normal(:, 2, :) + 0.5*normal(:, u-1, :), 1, 2, 1);   
+    % correct pole boundary with the mean across the closest parallel
+    normal(1, :, :) = repmat(mean(normal(2, :, :), 2), 1, u, 1);
+    normal(v, :, :) = repmat(mean(normal(v-1, :, :), 2), 1, u, 1);
 else
     if flag_parallel
         [normal] = height2normal_vec(longrid, latgrid, height, struct('frame',frame_normal,'fitting_error_threshold',fitting_error_threshold));

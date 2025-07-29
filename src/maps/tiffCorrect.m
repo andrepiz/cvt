@@ -1,4 +1,4 @@
-function tiffCorrect(filepath_tiff, filepath_tiff_new, data, bit_depth)
+function tiffCorrect(filepath_tiff, filepath_tiff_new, data, bit_depth, scaling_factor)
 
 % Create copy of file
 if ~isfolder(fileparts(filepath_tiff_new))
@@ -29,6 +29,15 @@ elseif isa(data,'uint8') || isa(data, 'uint16') || isa(data, 'uint32')
 end
 tagstruct.PlanarConfiguration = Tiff.PlanarConfiguration.Chunky;
 t.setTag(tagstruct);
+if exist("scaling_factor","var")
+    if isscalar(scaling_factor)
+        t.setTag('ImageDescription', sprintf('scaling=%d', scaling_factor));  % Standard metadata string
+    elseif length(scaling_factor) == 2
+        t.setTag('ImageDescription', sprintf('min=%f, max=%d', scaling_factor(1), scaling_factor(2)));  % Standard metadata string
+    else
+        error('Scaling factor should be a one-element or two-element (domain) vector')
+    end 
+end
 
 % Write image and close file
 t.write(data);

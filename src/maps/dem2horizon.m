@@ -1,4 +1,4 @@
-function [horizon] = dem2horizon(filepath_dem, filepath_horizon, Rbody, dem_scaling, dem_limits, nbit_map, flag_remove_outlier, flag_parallel, flag_plot, granularity, spanmax, tiling)
+function [horizon] = dem2horizon(filepath_dem, filepath_horizon, Rbody, dem_scaling, dem_limits, nbit_map, flag_remove_outlier, flag_parallel, flag_plot, granularity, spanmax, split_factor)
 
 if ~exist('dem_scaling','var')
     dem_scaling = 1;
@@ -28,8 +28,8 @@ if ~exist('spanmax','var')
     spanmax = 'auto';
 end
 
-if ~exist('tiling','var')
-    tiling = 'auto';
+if ~exist('split_factor','var')
+    split_factor = 'auto';
 end
 
 dem_data = dem_scaling*double(imread(filepath_dem));
@@ -68,20 +68,20 @@ else
     spanmax_nominal = spanmax;
 end
 
-if strcmp(tiling,'auto')
+if strcmp(split_factor,'auto')
     max_number_elems =  spanmax_nominal/(granularity * hlon) * spanmax_nominal/(granularity * hlat);
     max_memory_multipler = u*v*max_number_elems / (10e3*10e3);
-    tiling = ceil(sqrt(max_memory_multipler));
+    split_factor = ceil(sqrt(max_memory_multipler));
 end
     
-if tiling > 1
+if split_factor > 1
 
-    [rowStart, rowEnd, colStart, colEnd] = submatrixLimits(height, tiling);
+    [rowStart, rowEnd, colStart, colEnd] = submatrixLimits(height, split_factor);
     horizon = zeros(v, u, 'like', height);
     col_margin = ceil(spanmax_nominal/hlon);
     row_margin = ceil(spanmax_nominal/hlat);
 
-    tileCount = tiling^2;
+    tileCount = split_factor^2;
     
     for tileIdx = 1:tileCount
 
@@ -100,7 +100,23 @@ if tiling > 1
 
         horizon(rowIdxs, colIdxs) = tile_horizon;
 
-        disp([sprintf('%.1f%%. Tile %d of %d', 100*tileIdx/tileCount, tileIdx, tileCount)])
+        if flag_plot
+            if tileIdx == 1
+                figure(), 
+                hold on, axis equal, 
+                set(gca(), 'YDir','normal')
+                xlim([1, u])
+                xlabel('[px]')
+                ylim([1, v])
+                ylabel('[px]')
+                cb = colorbar();
+                cb.Limits = [-90, 90];
+            end
+            imagesc(colIdxs, rowIdxs, rad2deg(horizon(rowIdxs, colIdxs)))
+            drawnow
+        end
+
+        fprintf('\n%.1f%%. Tile %d of %d: rows %d - %d / columns %d - %d', 100*tileIdx/tileCount, tileIdx, tileCount, rowIdxs(1), rowIdxs(end), colIdxs(1), colIdxs(end));
     end
 
 else        
