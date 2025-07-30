@@ -98,7 +98,13 @@ if split_factor > 1
             tile_horizon = height2horizon_vec(tile_longrid, tile_latgrid, Finterp_height, struct('granularity', granularity,'spanmax', spanmax));
         end
 
-        horizon(rowIdxs, colIdxs) = tile_horizon;
+        if rowStart(tileIdx) == 1; subrowStart = 1; else subrowStart = 1 + row_margin; end
+        if rowEnd(tileIdx) == v; subrowEnd = length(rowIdxs); else subrowEnd = length(rowIdxs) - row_margin; end
+        if colStart(tileIdx) == 1; subcolStart = 1; else subcolStart = 1 + col_margin; end
+        if colEnd(tileIdx) == u; subcolEnd = length(colIdxs); else subcolEnd = length(colIdxs) - col_margin; end
+        subrowIdxs = subrowStart:subrowEnd;
+        subcolIdxs = subcolStart:subcolEnd;
+        horizon(rowIdxs(subrowIdxs), colIdxs(subcolIdxs)) = tile_horizon(subrowIdxs, subcolIdxs);
 
         if flag_plot
             if tileIdx == 1
