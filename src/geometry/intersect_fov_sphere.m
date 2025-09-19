@@ -16,13 +16,13 @@ end
 adim = R;
 
 posAdim_c2t_TAR = reshape(pos_c2t_TAR/adim, 3, 1);
-dAdim_c2t_TAR = vecnorm(posAdim_c2t_TAR);
-if dAdim_c2t_TAR < 1
-    error('Camera is inside the sphere')
+dAdim_c2t_TAR = norm(posAdim_c2t_TAR);
+if dAdim_c2t_TAR - 1 < -eps
+     error('Camera is inside the sphere')
 end
 
 % Boresight direction
-bs_TAR = posAdim_c2t_TAR./dAdim_c2t_TAR;
+bs_TAR = dcm_TAR2CAM'*[0; 0; 1];
 
 % Line of sight of each point along the FOV perimeter
 los_CAM = get_fov_perimeter(fov, nper, flag_debug);
@@ -39,7 +39,7 @@ PAdim_TAR = intersect_line_sphere(PAdim1_TAR, PAdim2_TAR, [0; 0; 0], 1);
 % 90 degrees
 pos_c2p_TAR = posAdim_c2t_TAR + PAdim_TAR;
 PDir_TAR = pos_c2p_TAR./vecnorm(pos_c2p_TAR);
-ixs_opposite = dot(PDir_TAR, repmat(bs_TAR, 1, size(PDir_TAR, 2))) < 0;
+ixs_opposite = bs_TAR'*PDir_TAR < 0;
 PAdim_TAR(:, ixs_opposite) = nan;
 
 % Dimensionalize
@@ -54,6 +54,7 @@ if flag_debug
     scatter3(PAdim_TAR(1,:), PAdim_TAR(2,:), PAdim_TAR(3,:),'r')
     quiver3(PAdim_TAR(1,:), PAdim_TAR(2,:), PAdim_TAR(3,:), ...
            los_TAR(1, :), los_TAR(2, :), los_TAR(3, :),'r','LineWidth',1,'MarkerSize',1)
+    cameratoolbar('show')
 end
 
 end

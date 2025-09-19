@@ -157,6 +157,7 @@ if flag_debug
         k2*los_inter_TAR_plot(1, :), k2*los_inter_TAR_plot(2, :), k2*los_inter_TAR_plot(3, :),'r','LineWidth',1,'MarkerSize',3)
     quiver3(repmat(-pos_c2t_TAR(1,:), 1, nper), repmat(-pos_c2t_TAR(2,:), 1, nper), repmat(-pos_c2t_TAR(3,:), 1, nper), ...
        k3*los_inter_TAR_plot(1, :), k3*los_inter_TAR_plot(2, :), k3*los_inter_TAR_plot(3, :),'r','LineWidth',1,'MarkerSize',3)
+    cameratoolbar('show')
 end
 
 end
