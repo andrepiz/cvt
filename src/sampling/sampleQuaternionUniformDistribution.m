@@ -1,0 +1,9 @@
+function q = sampleQuaternionUniformDistribution(nsamples)
+
+rs = rand([3, nsamples]);
+q = [sqrt(1-rs(1,:)).*sin(2*pi*rs(2,:));...
+     sqrt(1-rs(1,:)).*cos(2*pi*rs(2,:));...
+     sqrt(rs(1,:)).*sin(2*pi*rs(3,:));...
+     sqrt(rs(1,:)).*cos(2*pi*rs(3,:))];
+
+end
