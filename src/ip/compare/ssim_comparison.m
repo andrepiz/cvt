@@ -1,4 +1,8 @@
-function [LCS, L, C, S, Limg, Cimg, Simg] = ssim_comparison(img, tmpl, noise_level, flag_apply_ncc, flag_plot, dnr, cmap)
+function [LCS, L, C, S, Limg, Cimg, Simg, offsetNCC, imgNCC] = ssim_comparison(img, tmpl, noise_level, flag_apply_ncc, flag_plot, dnr, cmap)
+% SSIM_COMPARISON perform Structural-Similarity Index Measure comparison
+% between an image and a template (ground-truth). Set noise_level different
+% from zero to exlude background from the SSIM analysis. Set flag_apply_ncc
+% to true to apply normalized cross-correlation to align images before running SSIM.
 
 if ~exist('cmap','var')
     cmap = colormap('gray');
@@ -9,36 +13,38 @@ if ~exist('dnr','var')
 end
 
 % Remove unwanted pixels for comparison
-imgmask_undernoise = img < noise_level;
-tmplmask_undernoise = tmpl < noise_level;
+imgmask_undernoise = img <= noise_level;
+tmplmask_undernoise = tmpl <= noise_level;
 
 if flag_apply_ncc
 
     % Compute Normalized Cross-Correlation on the images where we set equal the
     % background
-    img_ncc = img;
-    img_ncc(imgmask_undernoise) = 0;
+    img_temp = img;
+    img_temp(imgmask_undernoise) = 0;
     tmpl_ncc = tmpl;
     tmpl_ncc(tmplmask_undernoise) = 0;
-    nccMatrix = normxcorr2(img_ncc, tmpl_ncc);
+    nccMatrix = normxcorr2(img_temp, tmpl_ncc);
     
     % Find the peak of NCC
     [maxNccValue, maxIndex] = max(abs(nccMatrix(:)));
     [ypeak, xpeak] = ind2sub(size(nccMatrix), maxIndex);
     
     % Determine the offset
-    offsetY = ypeak - size(img, 1);
-    offsetX = xpeak - size(img, 2);
+    offsetNCC(2) = ypeak - size(img, 1);
+    offsetNCC(1) = xpeak - size(img, 2);
     
     % Align the image to the template
-    img = imtranslate(img, [offsetX, offsetY],'FillValues',nan);
-    imgmask_undernoise = imtranslate(imgmask_undernoise, [offsetX, offsetY]);
+    imgNCC = imtranslate(img, [offsetNCC(1), offsetNCC(2)],'FillValues',nan);
+    imgmask_undernoise = imtranslate(imgmask_undernoise, [offsetNCC(1), offsetNCC(2)]);
+else
+    imgNCC = img;
+    offsetNCC = [0, 0];
 end
 
-
-[L, Limg] = ssim(img, tmpl, 'exponents',[1 0 0],'DynamicRange', dnr,'Radius',0.5);
-[C, Cimg] = ssim(img, tmpl, 'exponents',[0 1 0],'DynamicRange', dnr,'Radius',0.5);
-[S, Simg] = ssim(img, tmpl, 'exponents',[0 0 1],'DynamicRange', dnr,'Radius',0.5);
+[L, Limg] = ssim(imgNCC, tmpl, 'exponents',[1 0 0],'DynamicRange', dnr,'Radius',0.5);
+[C, Cimg] = ssim(imgNCC, tmpl, 'exponents',[0 1 0],'DynamicRange', dnr,'Radius',0.5);
+[S, Simg] = ssim(imgNCC, tmpl, 'exponents',[0 0 1],'DynamicRange', dnr,'Radius',0.5);
 
 % Remove unwanted pixels from SSIM comparison
 mask_noise = imgmask_undernoise | tmplmask_undernoise;
@@ -50,7 +56,7 @@ C = mean(Cimg(:), 'omitnan');
 S = mean(Simg(:), 'omitnan');
 LCS = L*C*S;
 
-img_plot = double(img);
+img_plot = double(imgNCC);
 img_plot(imgmask_undernoise) = nan;
 tmpl_plot = double(tmpl);
 tmpl_plot(tmplmask_undernoise) = nan;
@@ -58,13 +64,13 @@ tmpl_plot(tmplmask_undernoise) = nan;
 if flag_plot
 
     mask_img = img_plot/dnr;
-    mask_img(mask_img>0) = uint8(255);
+    mask_img(mask_img>noise_level) = uint8(255);
     mask_img(isnan(mask_img)) = 0;
     mask_img = repmat(mask_img, 1, 1, 3);
     mask_img(:,:, [2, 3]) = 0;
 
     mask_tmpl = tmpl_plot/dnr;
-    mask_tmpl(mask_tmpl>0) = uint8(255);
+    mask_tmpl(mask_tmpl>noise_level) = uint8(255);
     mask_tmpl(isnan(mask_tmpl)) = 0;
     mask_tmpl = repmat(mask_tmpl, 1, 1, 3);
     mask_tmpl(:,:, [1, 2]) = 0;

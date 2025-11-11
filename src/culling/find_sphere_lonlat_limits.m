@@ -33,7 +33,7 @@ while err >= tol
     nper = size(P_inter_TAR, 2);
 
     % Computing limits
-    sph = sph_coord(P_inter_TAR);
+    sph = sph_coord_fast(P_inter_TAR);
     [lon_lims(1), ixs_lims(1)] = min(sph(2,:));  % minimum longitude
     [lon_lims(2), ixs_lims(2)] = max(sph(2,:));  % maximum longitude
     [lat_lims(1), ixs_lims(3)] = min(sph(3,:));  % minimum latitude
@@ -110,7 +110,7 @@ elseif ninter ~= nper
     P_inter_TAR = dcm_TAR2REF'*P_inter_REF;
 
     % Computing limits
-    sph = sph_coord(P_inter_TAR);
+    sph = sph_coord_fast(P_inter_TAR);
     [lon_lims(1), ixs_lims(1)] = min(sph(2,:));  % minimum longitude
     [lon_lims(2), ixs_lims(2)] = max(sph(2,:));  % maximum longitude
     [lat_lims(1), ixs_lims(3)] = min(sph(3,:));  % minimum latitude

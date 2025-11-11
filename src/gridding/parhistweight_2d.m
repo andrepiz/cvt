@@ -47,18 +47,14 @@ end
 % Find sizes
 nrows = dLimits(1,2)*dGranularity;
 ncols = dLimits(2,2)*dGranularity;
-bins = zeros(nrows, ncols);
 
 % Concatenate idx and wvals
 idxs_all = cat(1, idxs_all{:});
 vals_all = cat(1, wvals_all{:});
 
-% Find unique indexes and sum the values belonging to same index
-[idxs,  ~, groups] = unique(idxs_all);
-wvals = accumarray(groups, vals_all);
-
-% Assign values to indexes
-bins(idxs) = wvals;
+% Sum the values belonging to same index
+wvals = accumarray(idxs_all, vals_all, [nrows*ncols, 1]);
+bins = reshape(wvals, nrows, ncols);
 
 end
 

@@ -1,4 +1,4 @@
-function [phi1, phi2, hphi] = sample_sphere_concentrated(phase_angle, nhphi, philims)
+function [phi1, phi2, hphi] = sample_sphere_concentrated(phase_angle, nhphi, philims, concentrationFactor)
 % This function samples points between the boundaries of a
 % sphere with sample points more concentrated around the nadir point.
 %
@@ -37,11 +37,9 @@ u = linspace(phiNorm_min, phiNorm_max, nhphi+1);
 %         vNorm = (v - v(1))./(v(end) - v(1));
 % 
 %     case 'logistic'
-            
-        alpha = 5;
 
-        A = 1 / (1 + exp(alpha * phiNorm_ref));
-        B = 1 / (1 + exp(-alpha * (1 - phiNorm_ref)));
+        A = 1 / (1 + exp(concentrationFactor * phiNorm_ref));
+        B = 1 / (1 + exp(-concentrationFactor * (1 - phiNorm_ref)));
         
         numerator = 1 - u * (B - A) - A;
         denominator = u * (B - A) + A;
@@ -50,7 +48,7 @@ u = linspace(phiNorm_min, phiNorm_max, nhphi+1);
         clip_limit = 1e-12;
         ratio = max(clip_limit, numerator ./ denominator);
         
-        y = phiNorm_ref - (1 / alpha) * log(ratio);
+        y = phiNorm_ref - (1 / concentrationFactor) * log(ratio);
 
         phi = phi_min + y*(phi_max - phi_min);
 

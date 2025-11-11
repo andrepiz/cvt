@@ -105,7 +105,8 @@ dcols_neighbors = pts_bounded(2,:) - centers(2,:) - dNeighborShifts(:, 2);
 
 % Constants
 dConstDiffMethod = sqrt(2) * (0.5 + abs(dWindowSize)); % Constant scaling required by diff method
-dConstGaussianMethod = 2 * dGaussianSigma * dGaussianSigma ;
+dConstGaussianMethod1 = 1 / (2 * dGaussianSigma * dGaussianSigma) ;
+dConstGaussianMethod2 = 1 / (pi * dConstGaussianMethod1);
 
 % Init weights and indexes
 dw_mat = zeros(nneighbors, npts);
@@ -132,8 +133,8 @@ for ii = 1:nneighbors
 
         case 3 % Gaussian kernel
             % Apply gaussian PSF
-            d = vecnorm(d_neighbors, 2, 1);
-            dw_mat(ii, :) = 1./(pi*dConstGaussianMethod).*exp(-d.^2./dConstGaussianMethod);
+            d2 = d_neighbors(1, :).^2 + d_neighbors(2, :).^2;
+            dw_mat(ii, :) = dConstGaussianMethod2 * exp(-dConstGaussianMethod1 * d2);
             
         otherwise
             assert(0)
@@ -153,12 +154,8 @@ wvals_mat = dw_mat.*vals;
 % Exclude the values associated to points outside
 wvals_all = wvals_mat(mask_inside);
 
-% Find unique indexes and sum the values belonging to same index
-[idxs,  ~, groups] = unique(idxs_all);
-wvals = accumarray(groups, wvals_all);
-
-% Create final bin
-bins(idxs) = wvals;
-
+% Sum the values belonging to same index
+wvals = accumarray(idxs_all, wvals_all, [nrows*ncols, 1]);
+bins = reshape(wvals, nrows, ncols);
 end
 
