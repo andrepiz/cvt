@@ -29,15 +29,20 @@ for iter = 1:nmaxiter
 
     % Interpolate body radius at ray positions
     Rrays = find_triaxial_radius(Azrays, Elrays, Rsph) + dem(Elrays, Azrays);
-    rays_sdf = abs(Hrays - Rrays);
+    rays_sdf = Hrays - Rrays;
 
     % Update status arrays
-    ixs_inf = rays_dist >= rays_dist_max;
+    if numel(rays_dist_max) == 1
+        ixs_inf = rays_dist >= rays_dist_max;
+    else
+        % account for different maximum distance thresholds
+        ixs_inf = rays_dist >= rays_dist_max(inds_act);
+    end
     ixs_occl = rays_sdf <= rays_step_threshold;
     ixs_act = ~(ixs_inf | ixs_occl);
 
     % Step ray distance for remaining active rays
-    rays_dist = rays_dist(ixs_act) + rays_sdf(ixs_act);
+    rays_dist = rays_dist(ixs_act) + abs(rays_sdf(ixs_act));
 
     % Only process currently active rays using index vector
     ixs_occluded(inds_act(ixs_occl)) = true;
