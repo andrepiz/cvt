@@ -8,8 +8,8 @@ sh = 1;    %scale factor for fov length wrt height
 apx_CAM = [0, 0, 0];
 
 % Base vertices
-bx = sh*h*tan(fov(1)/2);
-by = sh*h*tan(fov(2)/2);
+bx = sh*h*tan(fov(1));
+by = sh*h*tan(fov(2));
 
 bs_CAM = [-bx/2, -by/2, sh*h;
            bx/2, -by/2, sh*h;
