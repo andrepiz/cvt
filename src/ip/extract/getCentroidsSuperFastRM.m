@@ -1,19 +1,23 @@
-function [cameraPoints]= getCentroidsSuperFastRM(I_rm,threshold,minROI,maxROI,minDC,height,width)
+function [cameraPoints,CentSize,CentTotDC]= getCentroidsSuperFastRM(I_rm,threshold,minROI,maxROI,minDC,height,width)
 
 maxCentNum=400;
 xCent_all=zeros(1,maxCentNum);
 yCent_all=zeros(1,maxCentNum);
+CentSize=zeros(1,maxCentNum);
+CentTotDC = zeros(1,maxCentNum);
+CentFound = false(1,maxCentNum);
+
 k=0;
 idx = int32(2*width+4);
 step=max(int32(1),idivide(minROI,int32(2)));
-while idx < (height-1)*width-step
+while idx < (height-2)*width-step
     idx=idx+step;
     I0=I_rm(idx);
     if I0<threshold
         continue
     end
 
-    I_rm(idx)=uint8(0);
+    %I_rm(idx)=uint8(0);
 
     y0=idivide(idx,width)+1;
     x0=mod(idx-1,width)+1;
@@ -191,20 +195,20 @@ while idx < (height-1)*width-step
             DC_max>minDC
 
         k=k+1;
-
+        CentFound(k) = true;
         xCent_all(k)=xCent_tmp/DC2_tot;
         yCent_all(k)=yCent_tmp/DC2_tot;
+
+        CentSize(k)=sqrt(double((nLeft+nRight+1)^2 +(nDown+nUp+1)^2));
+        CentTotDC(k) = sqrt(DC2_tot);
     end
 
 
 end
-
-
-%xCent=nonzeros(xCent_all)'-0.5;
-%yCent=nonzeros(yCent_all)'-0.5;
  
-
-cameraPoints = [nonzeros(xCent_all) , nonzeros(yCent_all)]'-0.5;
+cameraPoints = [xCent_all(CentFound); yCent_all(CentFound)]-0.5;
+CentSize = CentSize(CentFound);
+CentTotDC = CentTotDC(CentFound);
 
 end
  

@@ -1,10 +1,5 @@
 %% CVT INSTALLATION %%
 
-% MATLAB environment
-clear
-clc
-close all
-
 if isfile("cvt_install.m")
     % SAVE INSTALL TO PATH
     copyfile("cvt_install.m",userpath)
