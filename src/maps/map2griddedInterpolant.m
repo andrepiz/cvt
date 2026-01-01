@@ -25,13 +25,14 @@ hlat = latspan/v;
 % Note: boundaries must still be at defined limits to avoid gaps
 lonspanvec = [lon_lims(1), linspace(lon_lims(1) + 1.5*hlon, lon_lims(2) - 1.5*hlon, u - 2), lon_lims(2)];
 latspanvec = [lat_lims(1), linspace(lat_lims(1) + 1.5*hlat, lat_lims(2) - 1.5*hlat, v - 2), lat_lims(2)];
-[latgrid, longrid] =  ndgrid(latspanvec, lonspanvec);
+
+% No need to create memory-expensive ndgrid
+%[latgrid, longrid] =  ndgrid(latspanvec, lonspanvec);
 
 % map must be flipped upside down so to have increasing altitude with
-% increasing rows
-map_mod = flip(map, 1);
-
-F =  griddedInterpolant(latgrid, longrid, map_mod, 'linear','none');
+% increasing rows. Can't flip latspanvec as griddedInterpolant require
+% ascending order vectors
+F =  griddedInterpolant({latspanvec, lonspanvec}, flip(map, 1), 'linear','none');
 
 % F(0, 0)
 % F(deg2rad(0), deg2rad(90))

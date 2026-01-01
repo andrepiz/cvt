@@ -32,17 +32,16 @@ for iter = 1:nmaxiter
     rays_sdf = Hrays - Rrays;
 
     % Update status arrays
-    if numel(rays_dist_max) == 1
-        ixs_inf = rays_dist >= rays_dist_max;
-    else
-        % account for different maximum distance thresholds
-        ixs_inf = rays_dist >= rays_dist_max(inds_act);
-    end
+    ixs_inf = rays_dist >= rays_dist_max;
     ixs_occl = rays_sdf <= rays_step_threshold;
     ixs_act = ~(ixs_inf | ixs_occl);
 
     % Step ray distance for remaining active rays
-    rays_dist = rays_dist(ixs_act) + abs(rays_sdf(ixs_act));
+    %rays_dist = rays_dist(ixs_act) + abs(rays_sdf(ixs_act)); % with abs: intersection may be missed 
+    rays_dist = rays_dist(ixs_act) + rays_sdf(ixs_act); % without abs: works like an interior point algorithm
+    if ~isscalar(rays_dist_max)
+        rays_dist_max = rays_dist_max(ixs_act);
+    end
 
     % Only process currently active rays using index vector
     ixs_occluded(inds_act(ixs_occl)) = true;
