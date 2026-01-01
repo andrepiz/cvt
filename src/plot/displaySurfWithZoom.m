@@ -9,7 +9,7 @@ function fh = displaySurfWithZoom(xx, yy, zz, winLoc, winPos, lw, fh)
 %             position in the axes of the zoomed portion
 % 
 % Example:
-%   displayImageWithZoom('example.jpg', [50, 50, 100, 100])
+%   displaySurfWithZoom('example.jpg', [50, 50, 100, 100])
 % 
 
 % Read and display the image

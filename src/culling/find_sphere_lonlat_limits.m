@@ -13,7 +13,8 @@ end
 if tol == 0
     error('Tolerance must be larger than 0')
 end
-nper = min(max(1, 20*ceil(1/tol)), 100e3);
+nper0 = 20*ceil(1/tol);
+nper = min(max(1, nper0), 100e3);
 
 err = tol;
 lon_lims = pi/2*[-1 1];

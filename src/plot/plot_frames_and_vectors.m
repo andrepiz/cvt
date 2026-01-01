@@ -1,4 +1,4 @@
-function fh = plot_frames_and_vectors(R_frames2ref, R_pos_ref, v_ref, v_pos_ref, fh, R_lg, v_lg, R_sz, R_lw, v_lw)
+function fh = plot_frames_and_vectors(R_frames2ref, R_pos_ref, v_ref, v_pos_ref, fh, R_lg, v_lg, R_sz, R_lw, v_lw, col)
     
 if ~exist('fh','var')
     fh = figure();
@@ -31,6 +31,12 @@ if ~exist('v_lw','var')
     v_lw = ones(1, m);
 end
 
+if ~exist('col','var')
+    % random colors
+    %col = rand(m+n, 3);
+    col = get(gca, 'ColorOrder');
+end
+
 if a~=3 || b~=3 && n~=0
     error('Provide R as [3x3xN]')
 end
@@ -39,9 +45,6 @@ if c~=3 && m~=0
     error('Provide v as [3xM]')
 end
 
-% random colors
-%col = rand(m+n, 3);
-col = get(gca, 'ColorOrder');
 col = interp1(linspace(0, 1, size(col,1)), col, linspace(0, 1, n+m+1));
 for i = 1:n
     c = col(i,:);

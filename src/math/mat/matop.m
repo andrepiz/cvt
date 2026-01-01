@@ -39,6 +39,9 @@ switch op
     case 'domain'
         m_in = min(mat_in, [],'all');
         M_in = max(mat_in, [],'all');
+        if ~isnumeric(varargin{1})
+            error('Domain parameter must be a vector of 2 elements')
+        end
         m_out = varargin{1}(1);
         M_out = varargin{1}(2);
         mat_out = (mat_in - m_in)/(M_in - m_in)*(M_out - m_out) + m_out;
