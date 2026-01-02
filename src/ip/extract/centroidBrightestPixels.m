@@ -111,7 +111,7 @@ for ix = 1:nCluster
             centroidLoc(:, ix) = [median(colsCluster), median(rowsCluster)];
     
         otherwise
-            error('centroiding method not recognized')
+            error('Centroiding method not recognized. Use median or moments')
     
     end
 end

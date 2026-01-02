@@ -49,9 +49,17 @@ for ix = 1:length(img)
 
     % Centroiding
     [uvROIAll_px, dnThreshold(ix), dnThresholdBackground(ix), maskNoiseTemp] = centroidBrightestPixels(img{ix}, fltSize_temp, noiseThreshold, nfrac, method, flag_plot);
-    uvROI_px(:, ix) = uvROIAll_px(:, 1); % taking the brightest ROI
-    sizeROI_px(1, ix) = 2*sqrt(numel(img{ix}(~maskNoiseTemp))/pi);
-    
+
+    if isempty(uvROIAll_px)
+        warning('NO ROI FOUND')
+        uvROI_px(:, ix) = [nan; nan];
+        sizeROI_px(1, ix) = nan;
+        continue
+    else
+        uvROI_px(:, ix) = uvROIAll_px(:, 1); % taking the brightest ROI
+        sizeROI_px(1, ix) = 2*sqrt(numel(img{ix}(~maskNoiseTemp))/pi);
+    end
+
     if flag_plot
         th = linspace(0, 2*pi, 100);
         figure('Name','centroiding_roi'), 
