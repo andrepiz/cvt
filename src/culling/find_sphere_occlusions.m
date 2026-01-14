@@ -11,7 +11,7 @@ function [ixs_occluded, Hrays, Rrays] = find_sphere_occlusions(Rsph, pos_t2p, di
 %along the ray, the sector from where the ray originated is not occluded.
 %The rays are propagated up to a maximum span distance rays_dist_max.
 
-if ~isa(dem, 'griddedInterpolant')
+if ~isa(dem, 'griddedInterpolant') && ~isa(dem, 'scatteredInterpolant')
     error('Please provide dem as a gridded interpolant')
 end
 

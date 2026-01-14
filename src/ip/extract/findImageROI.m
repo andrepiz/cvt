@@ -1,5 +1,6 @@
 function [uvROI_px, sizeROI_px, dnThreshold, dnThresholdBackground] = ...
-    findImageROI(img, fltSize, bodySizeApprox_px, noiseThreshold, method, flag_plot)
+    findImageROI(img, fltSize, bodySizeApprox_px, noiseThreshold, method, ...
+                phaseAngleApprox, flag_plot)
 
 if ~exist('fltSize','var')
     fltSize = [];
@@ -13,6 +14,9 @@ end
 if ~exist('method','var')
     method = 'moments';
 end
+if ~exist('phaseAngleApprox','var')
+    phaseAngleApprox = 0;
+end
 if ~exist('flag_plot','var')
     flag_plot = false;
 end
@@ -20,6 +24,8 @@ end
 if ~iscell(img)
     img = {img};
 end
+
+phaseAngleScaling = (1 + cos(phaseAngleApprox))/2;
 
 for ix = 1:length(img)
 
@@ -33,7 +39,7 @@ for ix = 1:length(img)
             bodySizeApprox_px_temp = bodySizeApprox_px(ix); 
         end    
         % Expected percentage of pixels illuminated by the target
-        nfrac = pi/4*(bodySizeApprox_px_temp).^2/numel(img{ix});
+        nfrac = phaseAngleScaling*pi/4*(bodySizeApprox_px_temp).^2/numel(img{ix});
     end
 
     if isempty(fltSize)
@@ -57,7 +63,7 @@ for ix = 1:length(img)
         continue
     else
         uvROI_px(:, ix) = uvROIAll_px(:, 1); % taking the brightest ROI
-        sizeROI_px(1, ix) = 2*sqrt(numel(img{ix}(~maskNoiseTemp))/pi);
+        sizeROI_px(1, ix) = 2*sqrt(1/phaseAngleScaling*numel(img{ix}(~maskNoiseTemp))/pi);
     end
 
     if flag_plot
