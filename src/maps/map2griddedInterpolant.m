@@ -57,5 +57,4 @@ F =  griddedInterpolant({latspanvec, lonspanvec}, flip(map, 1), 'linear','none')
 % FEP(2), mapEP(2)
 % FNP(3), mapNP(3)
 
-
 end
