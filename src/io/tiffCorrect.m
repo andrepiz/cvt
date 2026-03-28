@@ -7,7 +7,11 @@ end
 copyfile(filepath_tiff, filepath_tiff_new);
 
 % Define TIFF object
+try
 t = Tiff(filepath_tiff_new, 'w');
+catch
+t = Tiff(filepath_tiff_new, 'w8');
+end
 
 % Set TIFF tags for floating-point storage
 tagstruct.ImageLength = size(data, 1);

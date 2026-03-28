@@ -59,7 +59,9 @@ switch chMethod
             otherwise
                 error('Weighted sum algorithm not recognized')
         end
-        if bParallelization && length(dValuesScaled) > 1e6    % Over about 1M points the parallelization version is not faster
+        % Compute load on memory
+        npToProcess = length(dValuesScaled)*(dWindow*2+1)^2;
+        if bParallelization && length(dValuesScaled) > 1e6    % Over about 1M points the parallelization version is faster
              valsPixelScaledFine = parhistweight_2d(dCoordsRC, dValuesScaled, dLimsRC, dGranularity, ...
                                                     i32Algorithm, dWindow, dSigma, ...
                                                     false, ui8Workers);

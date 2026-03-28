@@ -25,8 +25,14 @@ assert(size(dLimits,1) == ui32CoordRowSize && size(dLimits,2) == 2, 'Please prov
 % Define coordinate shifts of each neighbor
 dNeighborShifts = permn(-dWindowSize:1:dWindowSize, ui32CoordRowSize);
 
+% Define pool number based on expected pool memory usage
+npToProcess = ui32CoordColSize*size(dNeighborShifts, 1);
+npLimitPerPool = 10e6;
+nPoolsLimited = uint8(floor(npToProcess./npLimitPerPool));
+nPoolsIdeal = ui8Numthreads;
+
 % Creating pools
-idx_Pools = ceil(linspace(0, double(ui32CoordColSize), double(ui8Numthreads + uint8(1))));
+idx_Pools = ceil(linspace(0, double(ui32CoordColSize), double(max(nPoolsIdeal, nPoolsLimited) + uint8(1))));
 npools = length(idx_Pools) - 1;
 coords_pools = cell(1, npools);
 values_pools = cell(1, npools);

@@ -75,6 +75,12 @@ brightVals = sortVals(1:N);
             
 ixsFilt = brightVals > 0;
 
+if ~any(ixsFilt)
+    warning('No signal identified larger than the noise threshold')
+    centroidLoc = [nan; nan];
+    return
+end
+
 brightValsFilt = brightVals(ixsFilt);
 rowsFilt = rows(ixsFilt);
 colsFilt = cols(ixsFilt);
