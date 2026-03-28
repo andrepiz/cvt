@@ -57,10 +57,13 @@ function [psf, psf_resized] = psf_zernike(wavelength, aberr_coeffs, pupil_diamet
     psf_complex = fftshift(fft2(ifftshift(pupil))) * df^2;
     psf_full     = abs(psf_complex).^2;
     
-    psf_resized = imresize(psf_full, ceil(res_px*scale));
+    % Bilinear interpolation makes strict non-negative the PSF
+    psf_resized = imresize(psf_full, ceil(res_px*scale/2)*2 + 1, 'bilinear');
 
+    % Reduce further convolution by keeping ensquared energy only
     psf_ensq = crop_or_pad_psf(psf_resized, 0.99);
     
+    % Normalize PSF
     psf = psf_ensq / sum(psf_ensq(:));
 end
 

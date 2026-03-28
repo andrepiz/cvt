@@ -44,7 +44,7 @@ function [ec_out, psf] = apply_aberration(ec_in, pupil_diameter, focal_length, p
     W = numel(wavelength);
     
     % ADD: detect multichannel input
-    is_multichannel = (ndims(ec_in) == 3);
+    is_multichannel = (ndims(ec_in) > 1);
     if is_multichannel
         assert(size(ec_in, 3) == W, ...
             'The number of color channels of the image (%d) must be equal to the number of wavelengths (%d).', size(ec_in,3), W);
@@ -85,7 +85,7 @@ function [ec_out, psf] = apply_aberration(ec_in, pupil_diameter, focal_length, p
         ec_in_os = repelem(ec_in, os_factor, os_factor, 1);
     end
 
-    res_px = size(ec_in);
+    res_px = size(ec_in, [1 2]);
 
     % --- PSF computation ---
     if is_multichannel

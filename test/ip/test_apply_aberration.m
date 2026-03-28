@@ -5,7 +5,7 @@ clear; close all; clc;
 cm = colormap('gray');
 
 %% 1. ABERRATIONS 
-img_size = 256*[1 1];
+img_size = 512*[1 1];
 [ec_sharp] = render_test_annulus(img_size);
 
 fNum = 1.4;

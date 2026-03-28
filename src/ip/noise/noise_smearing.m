@@ -12,6 +12,14 @@ function noise = noise_smearing(ecr_in, direction, t_readout)
 % Output:
 %   noise - Smeared accumulation matrix (electrons), same size as ecr
 
+% if size(ecr_in, 3) > 1
+%     noise = zeros(size(ecr_in));
+%     for ic = 1:size(ecr_in, 3)
+%         noise(:, :, ic) = noise_smearing(ecr_in(:, :, ic), direction, t_readout);
+%     end
+%     return
+% end
+
 [n_rows, ~] = size(ecr_in);
 
 tshift   = t_readout / n_rows;
