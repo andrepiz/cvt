@@ -56,6 +56,13 @@ switch chMethod
                 i32Algorithm = 2;
             case 'gaussian'
                 i32Algorithm = 3;
+                % Check on minimum computable number for guassian kernel zeroing
+                % exp(-745) = exp(- dNeighborMax * 1 / (2 * dGaussianSigma * dGaussianSigma))
+                dNeighborMax = sqrt(2)*(0.5 + dWindow);
+                dSigmaCritical = sqrt(dNeighborMax / 745 / 2);
+                if dSigma < dSigmaCritical
+                    warning('The Gaussian kernel standard deviation is too low. Energy loss might occur during direct gridding.')
+                end
             otherwise
                 error('Weighted sum algorithm not recognized')
         end
