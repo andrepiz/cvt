@@ -106,7 +106,7 @@ dcols_neighbors = pts_bounded(2,:) - centers(2,:) - dNeighborShifts(:, 2);
 % Constants
 dConstDiffMethod = sqrt(2) * (0.5 + abs(dWindowSize)); % Constant scaling required by diff method
 dConstGaussianMethod1 = 1 / (2 * dGaussianSigma * dGaussianSigma) ;
-dConstGaussianMethod2 = 1 / (pi * dConstGaussianMethod1);
+%dConstGaussianMethod2 = (1 / pi) * dConstGaussianMethod1;
 
 % Init weights and indexes
 dw_mat = zeros(nneighbors, npts);
@@ -134,7 +134,8 @@ for ii = 1:nneighbors
         case 3 % Gaussian kernel
             % Apply gaussian PSF
             d2 = d_neighbors(1, :).^2 + d_neighbors(2, :).^2;
-            dw_mat(ii, :) = dConstGaussianMethod2 * exp(-dConstGaussianMethod1 * d2);
+            %dw_mat(ii, :) = dConstGaussianMethod2 * exp(-dConstGaussianMethod1 * d2);
+            dw_mat(ii, :) = exp(-dConstGaussianMethod1 * d2);
             
         otherwise
             assert(0)

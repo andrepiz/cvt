@@ -12,6 +12,17 @@ if flag_debug
     ax2 = subplot(1,2,2); grid on, hold on; yline(rays_step_threshold); title('Ray SDF');
 end
 
+if numel(Rsph) == 1
+    flagIsSphere = true;
+else
+    flagIsSphere = false;
+end
+if ~isscalar(rays_dist_max)
+    flagRaysDistMaxVec = true;
+else
+    flagRaysDistMaxVec = false;
+end
+
 inds_act = 1:nhl;
 for iter = 1:nmaxiter
 
@@ -22,13 +33,21 @@ for iter = 1:nmaxiter
 
     % Ray-march for each active ray
     pos_t2r = pos_t2p(:, inds_act) - dir_r2p(:, inds_act) .* rays_dist;
-    sph_t2r = sph_coord_fast(pos_t2r);
-    Hrays = sph_t2r(1,:);
-    Azrays = sph_t2r(2,:);
-    Elrays = sph_t2r(3,:);
+    % sph_t2r = sph_coord_fast(pos_t2r);
+    % Hrays = sph_t2r(1,:);
+    % Azrays = sph_t2r(2,:);
+    % Elrays = sph_t2r(3,:);
+    Azrays = atan2(pos_t2r(2,:), pos_t2r(1,:));
+    pos_XY = hypot(pos_t2r(1,:), pos_t2r(2,:));
+    Hrays = hypot(pos_XY, pos_t2r(3,:));
+    Elrays = atan2(pos_t2r(3,:), pos_XY);
 
     % Interpolate body radius at ray positions
-    Rrays = find_triaxial_radius(Azrays, Elrays, Rsph) + dem(Elrays, Azrays);
+    if flagIsSphere
+        Rrays = Rsph + dem(Elrays, Azrays);
+    else
+        Rrays = find_triaxial_radius(Azrays, Elrays, Rsph) + dem(Elrays, Azrays);
+    end
     rays_sdf = Hrays - Rrays;
 
     % Update status arrays
@@ -39,7 +58,7 @@ for iter = 1:nmaxiter
     % Step ray distance for remaining active rays
     %rays_dist = rays_dist(ixs_act) + abs(rays_sdf(ixs_act)); % with abs: intersection may be missed 
     rays_dist = rays_dist(ixs_act) + rays_sdf(ixs_act); % without abs: works like an interior point algorithm
-    if ~isscalar(rays_dist_max)
+    if flagRaysDistMaxVec
         rays_dist_max = rays_dist_max(ixs_act);
     end
 
@@ -47,14 +66,18 @@ for iter = 1:nmaxiter
     ixs_occluded(inds_act(ixs_occl)) = true;
     inds_act(~ixs_act) = [];
 
-    if flag_show_iteration && mod(iter, max(1, round(nmaxiter/10))) == 0
+    if flag_show_iteration
+        if mod(iter, max(1, round(nmaxiter/10))) == 0
         fprintf('%d%%: %d occluded, %d active\n', ...
             round(iter/nmaxiter*100), sum(ixs_occluded), numel(inds_act));
+        end
     end
 
-    if flag_debug && (mod(iter, 10) == 0)
+    if flag_debug
+        if (mod(iter, 10) == 0)
         plot(ax1, sort(rays_dist)), plot(ax2, sort(rays_sdf))
         drawnow;
+        end
     end
 end
 

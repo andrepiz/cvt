@@ -1,6 +1,6 @@
 function [ixs_occluded, Hrays, Rrays] = find_sphere_occlusions(Rsph, pos_t2p, dir_r2p, dem, ...
                                         nrs, rays_dist_max, nworkers, algorithm_intersection, method_sampling, ...
-                                        rays_step_threshold, rays_dist_first)
+                                        rays_step_threshold, rays_dist_first, flag_print_rays_stats)
 %FIND_SPHERE_OCCLUSIONS Find the indexes of the occluded points in a sphere
 %of given radius Rsph, considering the point coordinates wrt sphere center pos_t2p, 
 %the directions of the ray at each point dir_r2p and a Digital-Elevation-Map 
@@ -13,6 +13,10 @@ function [ixs_occluded, Hrays, Rrays] = find_sphere_occlusions(Rsph, pos_t2p, di
 
 if ~isa(dem, 'griddedInterpolant') && ~isa(dem, 'scatteredInterpolant')
     error('Please provide dem as a gridded interpolant')
+end
+
+if ~exist('flag_print_rays_stats', 'var')
+    flag_print_rays_stats = true;   % Print some statistics of the ray intersection algorithm
 end
 
 % Ray settings
@@ -127,8 +131,8 @@ switch algorithm_intersection
         end
 
         if ~isempty(percActiveRays)
-            fprintf([num2str(round(1e2*percRaysDone)),'%% completed, ',num2str(round(1e2*percActiveRays)),'%% left unchecked.'])
-            if percActiveRays > 0.1
+            if flag_print_rays_stats; fprintf([num2str(round(1e2*percRaysDone)),'%% completed, ',num2str(round(1e2*percActiveRays)),'%% left unchecked.']); end
+            if percActiveRays > 0.1 
                 fprintf('\n')
                 warning('More than 10% of points were left unchecked for occlusions. Increase number of rays in setting.culling.occlusion_rays or increase the shadow accuracy in setting.culling.occlusion_accuracy to improve the rendering of shadows, if needed.')
             end

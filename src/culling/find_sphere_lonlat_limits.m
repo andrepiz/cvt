@@ -20,6 +20,8 @@ err = tol;
 lon_lims = pi/2*[-1 1];
 lat_lims = pi/2*[-1 1];
 
+numtol = 1e-11;
+
 while err >= tol
 
     % Updating with new limits
@@ -78,7 +80,7 @@ if ninter == 0 || ninter == 1
     % respect to boresight.
 
     flag_in_fov = false;
-    if abs(dot(bsDir_TAR, dir_c2t_TAR) - 1) <= eps
+    if abs(dot(bsDir_TAR, dir_c2t_TAR) - 1) <= numtol
         % Boresight and target direction are aligned
         flag_in_fov = true;
     else
