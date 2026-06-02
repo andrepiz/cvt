@@ -1,16 +1,19 @@
-function rgb = map2rgb(map, nbit)
+function img = map2rgb(img, nbit, encoding)
 % Function to convert a 3D map to an RGB image. Latitude decreases with 
-% increasing rows and longitude increases with
-% increasing columns
+% increasing rows and longitude increases with increasing columns
 % Input:
-%   map [lat x lon x 3] matrix where each element contains a 3d unit vector.
+%   img - HxWx3 matrix where each pixel contains the [nx, ny, nz] normal
+%         vector with domain [-1 1]
 % Output:
-%   rgb [u x v x 3] RGB image
+%   img - HxWx3 RGB image with domain [0 2^nbit-1]
 
-% Scale the normal vectors from [-1, 1] to [0, 1]
-ana = (map + 1) / 2;
+if ~exist('encoding','var')
+    encoding = 'linear';
+end
 
-rgb = analog2digital(ana, 1, 1, nbit);
+img = (img + 1) / 2; % Scale the normal vectors from [-1, 1] to [0, 1]
+img = encodeImage(img, encoding);
+img = analog2digital(img, 1, 1, nbit);
 
 end
 

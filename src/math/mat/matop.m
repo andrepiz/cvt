@@ -33,9 +33,17 @@ switch op
                 error('Merge transformation not recognized')
         end
     case 'scale'
-        mat_out = varargin{1}.*mat_in;
+        if isnumeric(varargin{1})
+            mat_out = varargin{1}.*mat_in;
+        else
+            error('Scale factor is not a number')
+        end
     case 'shift'
-        mat_out = varargin{1}+mat_in;
+        if isnumeric(varargin{1})
+            mat_out = varargin{1}+mat_in;
+        else
+            error('Shift factor is not a number')
+        end
     case 'domain'
         m_in = min(mat_in, [],'all');
         M_in = max(mat_in, [],'all');

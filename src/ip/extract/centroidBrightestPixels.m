@@ -1,4 +1,4 @@
-function [centroidLoc, dnThreshold, dnThresholdBackground, maskNoise] = centroidBrightestPixels(img, fltSize, noiseThreshold, nfrac, method, flag_plot)
+function [centroidLoc, dnThreshold, dnThresholdBackground, maskNoise, valLoc] = centroidBrightestPixels(img, fltSize, noiseThreshold, nfrac, method, flag_plot)
 % CENTROIDBRIGHTESTPIXELS Find centroids of clusters formed by the brightest pixels in an image.
 %
 % [centroidLoc, dnThreshold, dnThresholdBackground, maskNoise] = centroidBrightestPixels(img, fltSize, nfrac, noiseThreshold, method)
@@ -94,7 +94,7 @@ clusterLabels = dbscan([rowsFilt, colsFilt], epsilon, minpts);
 nCluster = max(clusterLabels(:));
 
 centroidLoc = nan(2, nCluster);
-
+valLoc = nan(1, nCluster);
 for ix = 1:nCluster
 
     ixsCluster = clusterLabels == ix;
@@ -111,11 +111,13 @@ for ix = 1:nCluster
             I10 = sum(rowsCluster.*valsClusterSquared);
             I01 = sum(colsCluster.*valsClusterSquared);
             centroidLoc(:, ix) = [I01/I00, I10/I00];
-    
+            valLoc(:, ix) = sum(valsCluster(:));
+
         case 'median'
             % Median of locations of values above noise threshold
             centroidLoc(:, ix) = [median(colsCluster), median(rowsCluster)];
-    
+            valLoc(:, ix) = sum(brightValsFilt(ixsCluster));
+
         otherwise
             error('Centroiding method not recognized. Use median or moments')
     
@@ -125,14 +127,14 @@ end
 if flag_plot
     figure('name','centroiding','units','pixels','Position',[100 100 300 size(img,2)/size(img,1)*300])
     set(gca(), 'Position',[0 0 1 1])
-    if max(img(:))>255
+    %if max(img(:))>255
         imagesc(img)
         colormap('jet')
         col = 'white';
-    else
-        imshow(img);
-        col = 'red';
-    end
+    % else
+    %     imshow(img);
+    %     col = 'red';
+    % end
     hold on, axis equal
     scatter(centroidLoc(1, :), centroidLoc(2, :), 150, '+','LineWidth',0.2,'MarkerEdgeColor',col)
     scatter(centroidLoc(1, :), centroidLoc(2, :), 200, 'o','LineWidth',0.5,'MarkerEdgeColor',col)
