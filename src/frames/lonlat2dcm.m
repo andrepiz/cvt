@@ -1,7 +1,7 @@
 function dcm_body2point = lonlat2dcm(lon, lat)
 % LONLAT2DCM(lon, lat) computes the DCM from body-fixed reference frame 
 % (REF, e.g., IAU body frame) to pointing frame (e.g., CSF), where 
-% z-axis points to the unit sphere surface at longitude lon (rad), 
+% x-axis points to the unit sphere surface at longitude lon (rad), 
 % latitude lat (rad). Vectorized over trailing dimension of lon/lat.
 %
 % Inputs:

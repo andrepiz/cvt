@@ -1,4 +1,4 @@
-function [P, u] = intersect_line_sphere(P1, P2, PC, R)
+function [P, u, flag] = intersect_line_sphere(P1, P2, PC, R)
 % Find the point of intersection of a line defined by two points P1 and P2
 % with a sphere of radius R whose center is at PC. If two points of
 % intersection are found, the one closer to P1 is returned.
@@ -17,9 +17,11 @@ c = vecnorm(PC).^2 + vecnorm(P1).^2 - ...
 
 k = b.^2 - 4*a.*c;
 
+flag = k >= 0;
+
 % the closest to P1
 u = min((-b + sqrt(k))./(2*a), (-b - sqrt(k))./(2*a));
-u(k < 0) = nan;
+u(~flag) = nan;
 u(k == 0) = -b/(2*a);
 
 P = P1 + u.*(P2 - P1);
