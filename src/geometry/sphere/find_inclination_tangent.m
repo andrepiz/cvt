@@ -1,5 +1,6 @@
 function ang_inc = find_inclination_tangent(r1, r2, d)
-%find_inclination_tangent Angle of the external tangent line wrt horizontal.
+%FIND_INCLINATION_TANGENT Angle of the external tangent line between two spheres 
+% with respect to the horizontal line connecting their two centers.
 %
 % Inputs:
 %   r1 : radius of first sphere
@@ -8,7 +9,6 @@ function ang_inc = find_inclination_tangent(r1, r2, d)
 %
 % Output:
 %   ang_inc : angle [rad] of the external tangent line wrt the horizontal
-%           (line connecting the two centers)
 %
 % Notes:
 %   For external tangent: sin(alpha) = (r1 - r2) / d
