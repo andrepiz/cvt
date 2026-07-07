@@ -52,6 +52,8 @@ else
             psf = exp(-x.^2/(2*sigma_psf^2));  %1D gaussian (Gaussian convolution are separable column-row)
             psf = psf / sum(psf);  %to ensure conservation of spread photons
             flag_1dpsf = true;
+            kcol = psf(:);           % Nx1
+            krow = psf(:).';         % 1xN
 
         case 'gaussian_2d'
             kernel_radius = ceil(3*sigma_psf); %gaussian function cut at 3*sigma
@@ -66,46 +68,34 @@ else
 end
 
 % -- Distribution of excessive photons with gaussian spread  --
-
 %to enter the loop, photons matrix is cut at fwc value and on top of this
 %the excess number of photons not eliminated with sensor architecture are
 %spread 
-
 n = n - ex; 
 iter = 0;       %iteration counter initialization
 
 %   -- Loop for excess photons convergence to tol --
-        
 while iter < nMaxIter
     iter = iter + 1;
-
     if flag_1dpsf
         % 2D convolution using 1D Gauss function. Gaussian 2D convolution separable row - column, 
         % this has the same result of a convolution of a 2D gaussian but way faster
-        planned = conv2(psf, psf', excess, 'same'); 
-
+        planned = conv2(conv2(excess, kcol, 'same'), krow, 'same');
     else
         % Planned redistribution using 2D convolution
         planned = conv2(excess, psf, 'same');
     end
-
     n = n + planned; % to previous photon matrix I add the excess photons gaussian spread
-
     % Compute next iteration excess
     excess = max(0, n - fwc); %remove photons higher than fwc
-
     % Clamp tiny numerical negatives
     n(n < 0) = 0;
-
-    if max(excess(:)) <= tol
+    if ~any(excess(:) > tol)
         break;  % stop when the max value of excess photons is above a threshold
     end
-
     % Remove excess from each cell
     n = n - excess;
-
 end
-
 trapped = sum(max(0, n(:) - fwc(:)));  %to check the residual of excessive photons remained (should be == sum(excess(:)))
 
 ec_out = n;

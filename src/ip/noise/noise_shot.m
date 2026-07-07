@@ -11,7 +11,7 @@ if exist('seed', 'var')
     end
 end
 
-ec_out = poissrnd(ec_in);
+ec_out = poissrnd_fast(ec_in);
 
 noise = ec_out - ec_in;
 

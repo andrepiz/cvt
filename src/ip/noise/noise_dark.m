@@ -25,7 +25,7 @@ else
 end
 
 dcmat = max(0, dcmat);           % no removal of electrons
-noise = poissrnd(dcmat).*tExp;   % dark electron noise
+noise = poissrnd_fast(dcmat).*tExp;   % dark electron noise
 
 end
 
