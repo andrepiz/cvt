@@ -80,14 +80,20 @@ if ninter == 0 || ninter == 1
     % respect to boresight.
 
     flag_in_fov = false;
-    if abs(dot(bsDir_TAR, dir_c2t_TAR) - 1) <= numtol
-        % Boresight and target direction are aligned
+    cosBsT = max(-1, min(1, dot(bsDir_TAR, dir_c2t_TAR)));
+    if cosBsT >= 1 - numtol
+        % Target direction aligned with boresight.
         flag_in_fov = true;
+    elseif cosBsT <= -1 + numtol
+        % Target direction opposite to boresight: behind the camera.
+        flag_in_fov = false;
     else
         ctPlaneDir_TAR = cross(bsDir_TAR, dir_c2t_TAR);
         losProj_TAR = project_on_plane(los_inter_TAR, ctPlaneDir_TAR);
-        angBsLosProj = acos(losProj_TAR'*bsDir_TAR);  % angle between boresight and fov perimeter
-        angBsT = acos(dir_c2t_TAR'*bsDir_TAR);           % angle between boresight and target    
+        losProjNormalized_TAR = losProj_TAR./vecnorm(losProj_TAR);
+        cosBsLosProj = max(-1, min(1, bsDir_TAR.' * losProjNormalized_TAR));
+        angBsLosProj = acos(cosBsLosProj);  % angle between boresight and fov perimeter
+        angBsT = acos(cosBsT);           % angle between boresight and target    
         if angBsT <= max(angBsLosProj) + br_tangency
             flag_in_fov = true;
         end
