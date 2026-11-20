@@ -12,59 +12,59 @@ function [psf, psf_resized] = psf_zernike(wavelength, aberr_coeffs, pupil_diamet
 % Output:
 %   psf  - PSF kernel resampled to detector pixel scale, energy-normalized
 
+% The number of elements in the pupil function array is the same as the number of elements in the image plane array.
+% For an even number of array elements, the spacing between discrete coordinate values is equal to fS / numPixels
+% fS is called the sampling frequency and is equal to one divided by the spacing between image space coordinates. 
+% 
+fS = 1 ./ max(pixel_pitch); % Spatial sampling frequency [1/m]
+df = fS ./ max(res_px); % Spacing between discrete frequency coordinates [1/(m * px)]
+% fx = -fS / 2:df:fS / 2-df; % Spatial frequency [1/m]
+fNum = focal_length / pupil_diameter;
+fNA           = fNum / wavelength; % radius of the pupil [1/m]
+pupilSize     = fNA / df;        % [px]
 
-    % The number of elements in the pupil function array is the same as the number of elements in the image plane array.
-    % For an even number of array elements, the spacing between discrete coordinate values is equal to fS / numPixels
-    % fS is called the sampling frequency and is equal to one divided by the spacing between image space coordinates. 
-    % 
-    fS = 1 ./ max(pixel_pitch); % Spatial sampling frequency [1/m]
-    df = fS ./ max(res_px); % Spacing between discrete frequency coordinates [1/(m * px)]
-    % fx = -fS / 2:df:fS / 2-df; % Spatial frequency [1/m]
-    fNum = focal_length / pupil_diameter;
-    fNA           = fNum / wavelength; % radius of the pupil [1/m]
-    pupilSize     = fNA / df;        % [px]
-    
-    scale = Nfft / pupilSize;
+scale = Nfft / pupilSize;
 
-    % --- Pupil grid (normalized coords) ---
-    x_p = pupilSize/2*linspace(-1, 1, Nfft);  % [m]
-    [xp, yp] = meshgrid(x_p);
-    rho   = sqrt(xp.^2 + yp.^2)/(pupilSize/2);
-    theta = atan2(yp, xp);
-    aperture = double(rho <= 1);
-    
-    % --- Zernike wavefront ---
-    coeffs = zeros(1, 9);
-    if ~isempty(aberr_coeffs)
-        n = min(numel(aberr_coeffs), 9);
-        coeffs(1:n) = aberr_coeffs(1:n);
-    end
-    
-    Z = zeros(Nfft, Nfft, 9);
-    Z(:,:,1) = rho .* cos(theta);
-    Z(:,:,2) = rho .* sin(theta);
-    Z(:,:,3) = 2*rho.^2 - 1;
-    Z(:,:,4) = rho.^2 .* sin(2*theta);
-    Z(:,:,5) = rho.^2 .* cos(2*theta);
-    Z(:,:,6) = (3*rho.^3 - 2*rho) .* sin(theta);
-    Z(:,:,7) = (3*rho.^3 - 2*rho) .* cos(theta);
-    Z(:,:,8) = rho.^3 .* sin(3*theta);
-    Z(:,:,9) = rho.^3 .* cos(3*theta);
-    
-    phase_aberr = 2 * pi * sum(reshape(coeffs, 1, 1, 9) .* Z, 3);
-    pupil       = aperture .* exp(1i * phase_aberr);
-    
-    psf_complex = fftshift(fft2(ifftshift(pupil))) * df^2;
-    psf_full     = abs(psf_complex).^2;
-    
-    % Bilinear interpolation makes strict non-negative the PSF
-    psf_resized = imresize(psf_full, ceil(res_px*scale/2)*2 + 1, 'bilinear');
+% --- Pupil grid (normalized coords) ---
+x_p = pupilSize/2*linspace(-1, 1, Nfft);  % [m]
+[xp, yp] = meshgrid(x_p);
+rho   = sqrt(xp.^2 + yp.^2)/(pupilSize/2);
+theta = atan2(yp, xp);
+aperture = double(rho <= 1);
 
-    % Reduce further convolution by keeping ensquared energy only
-    psf_ensq = crop_or_pad_psf(psf_resized, 0.99);
-    
-    % Normalize PSF
-    psf = psf_ensq / sum(psf_ensq(:));
+% --- Zernike wavefront ---
+coeffs = zeros(1, 9);
+if ~isempty(aberr_coeffs)
+    n = min(numel(aberr_coeffs), 9);
+    coeffs(1:n) = aberr_coeffs(1:n);
+end
+
+Z = zeros(Nfft, Nfft, 9);
+Z(:,:,1) = rho .* cos(theta);
+Z(:,:,2) = rho .* sin(theta);
+Z(:,:,3) = 2*rho.^2 - 1;
+Z(:,:,4) = rho.^2 .* sin(2*theta);
+Z(:,:,5) = rho.^2 .* cos(2*theta);
+Z(:,:,6) = (3*rho.^3 - 2*rho) .* sin(theta);
+Z(:,:,7) = (3*rho.^3 - 2*rho) .* cos(theta);
+Z(:,:,8) = rho.^3 .* sin(3*theta);
+Z(:,:,9) = rho.^3 .* cos(3*theta);
+
+phase_aberr = 2 * pi * sum(reshape(coeffs, 1, 1, 9) .* Z, 3);
+pupil       = aperture .* exp(1i * phase_aberr);
+
+psf_complex = fftshift(fft2(ifftshift(pupil))) * df^2;
+psf_full     = abs(psf_complex).^2;
+
+% Bilinear interpolation makes strict non-negative the PSF
+psf_resized = imresize(psf_full, ceil(res_px*scale/2)*2 + 1, 'bilinear');
+
+% Reduce further convolution by keeping ensquared energy only
+psf_ensq = crop_or_pad_psf(psf_resized, 0.99);
+
+% Normalize PSF
+psf = psf_ensq / sum(psf_ensq(:));
+
 end
 
 % -------------------------------------------------------------------------
