@@ -1,4 +1,4 @@
-function [xyz, R] = uvd2xyz(K, u, v, d, sigma_u, sigma_v, sigma_d)
+function [xyz, R, J] = uvd2xyz(K, u, v, d, sigma_u, sigma_v, sigma_d)
 % Return 3D vector from pixel (u,v) + depth d.
 % R = 3x3 covariance from sigmas (optional).
 % K: 3x3 matrix OR 1x5 [fu fv cu cv s] (skew=0 if absent)
