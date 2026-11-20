@@ -53,7 +53,7 @@ end
 
 % Thresholding
 maskNoise = imgData < dnThreshold;
-dnThresholdBackground = mean(imgData(maskNoise)) + 3*std(imgData(maskNoise));
+dnThresholdBackground = mean(imgData(maskNoise)) + 10*std(imgData(maskNoise));
 imgData(maskNoise) = 0;
 
 [sortVals, sortInds] = sort(imgData(:), 'descend');
@@ -78,6 +78,7 @@ ixsFilt = brightVals > 0;
 if ~any(ixsFilt)
     warning('No signal identified larger than the noise threshold')
     centroidLoc = [nan; nan];
+    valLoc = nan;
     return
 end
 
@@ -85,13 +86,14 @@ brightValsFilt = brightVals(ixsFilt);
 rowsFilt = rows(ixsFilt);
 colsFilt = cols(ixsFilt);
 
-% Apply DBSCAN clustering on the filtered spatial coordinates
-% you could use intensity as "dimension" to group based also on this
-% information.
+% Apply spatial clustering on the filtered spatial coordinates
 epsilon = 2.5;       % Distance threshold (tune as needed)
 minpts = 5;          % Minimum points for a cluster (tune as needed)
-clusterLabels = dbscan([rowsFilt, colsFilt], epsilon, minpts);
-nCluster = max(clusterLabels(:));
+% DBSCAN Original version
+%clusterLabels = dbscan([rowsFilt, colsFilt], epsilon, minpts);
+%nCluster = max(clusterLabels(:));
+% Fast approximated version using dilation and cluster size filtering
+[clusterLabels, nCluster] = dbscan_approx([rowsFilt, colsFilt], epsilon, minpts, size(imgData));
 
 centroidLoc = nan(2, nCluster);
 valLoc = nan(1, nCluster);
@@ -111,18 +113,22 @@ for ix = 1:nCluster
             I10 = sum(rowsCluster.*valsClusterSquared);
             I01 = sum(colsCluster.*valsClusterSquared);
             centroidLoc(:, ix) = [I01/I00, I10/I00];
-            valLoc(:, ix) = sum(valsCluster(:));
+            valLoc(1, ix) = sum(valsCluster(:));
 
         case 'median'
             % Median of locations of values above noise threshold
             centroidLoc(:, ix) = [median(colsCluster), median(rowsCluster)];
-            valLoc(:, ix) = sum(brightValsFilt(ixsCluster));
+            valLoc(1, ix) = sum(brightValsFilt(ixsCluster));
 
         otherwise
             error('Centroiding method not recognized. Use median or moments')
     
     end
 end
+
+% Sort by descending brightness size
+[valLoc, ixsSort] = sort(valLoc, 'descend');
+centroidLoc = centroidLoc(:, ixsSort);
 
 if flag_plot
     figure('name','centroiding','units','pixels','Position',[100 100 300 size(img,2)/size(img,1)*300])
