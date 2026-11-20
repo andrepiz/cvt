@@ -59,9 +59,12 @@ for i = 1:n
     x = x + pos;
     y = y + pos;
     z = z + pos;
-    text(x(1),x(2),x(3),['$X_{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
-    text(y(1),y(2),y(3),['$Y_{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
-    text(z(1),z(2),z(3),['$Z_{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
+    % text(x(1),x(2),x(3),['$x^{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
+    % text(y(1),y(2),y(3),['$y^{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
+    % text(z(1),z(2),z(3),['$z^{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
+    text(x(1),x(2),x(3),['$\mathbf{\hat{x}}^{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
+    text(y(1),y(2),y(3),['$\mathbf{\hat{y}}^{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
+    text(z(1),z(2),z(3),['$\mathbf{\hat{z}}^{',R_lg{i},'}$'],'Color',c,'Interpreter','latex')
 end
 
 for j = 1:m

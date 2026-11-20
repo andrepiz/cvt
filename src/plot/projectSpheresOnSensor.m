@@ -259,25 +259,7 @@ K = [f, 0, cx;
 
 C = sphere2conicMat([0;0;0], -[X_c; Y_c; Z_c], eye(3), K, R);
 
-% Ellipse centre
-centre = -C(1:2,1:2) \ C(1:2,3);
-u_e = centre(1);
-v_e = centre(2);
-
-% Shape matrix
-val_c = [centre; 1].' * C * [centre; 1];
-M = -C(1:2,1:2) / val_c;
-
-% Eigen-decomposition -> axes and orientation
-[V, D] = eig(M);
-lam = diag(D);
-
-[lam, idx] = sort(lam);
-V = V(:, idx);
-
-a = 1 / sqrt(lam(1));
-b = 1 / sqrt(lam(2));
-phi = atan2(V(2,1), V(1,1));
+[u_e, v_e, a, b, phi] = conic2ellipse(C);
 
 % Parametric ellipse
 cp = cos(phi);

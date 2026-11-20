@@ -48,7 +48,7 @@ for ix = 1:size(locZoom, 1)
     
     % Ensure the zoom region is within image boundaries
     if x < 1 || y < 1 || x + width > imgWidth || y + height > imgHeight
-        error('zoomLoc dimensions exceed the image boundaries.');
+        error('locZoom dimensions exceed the image boundaries.');
     end
     
     % Link the zoomed box with red lines to the inset corners
